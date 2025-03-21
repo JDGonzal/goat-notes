@@ -653,3 +653,168 @@ Así finalmente luce el browser con los tres botónes:
 
 >[!TIP]  
 >### Abrir el archivo **`package.json`** y borra todos los _carets_ (`^`).
+
+## 5. Build LogOutButton (0:17:21)
+
+1. Creamos en la carpeta **"src/components"**, el archivo de
+nombre **`LogOutButton.tsx`** y le ponemos el _snippet_ de `rfce`:
+```js
+import React from "react";
+
+function LogOutButton() {
+  return <div>LogOutButton</div>;
+}
+
+export default LogOutButton;
+```
+2. En el archivo **`Header.tsx`**, cambiamos el texto de `"logout"`,
+por el renderizado del `<LogOutButton/>`, tambien añadimos la 
+importación.
+3. Regresando **`LogOutButton.tsx`**, completamos el código con
+componentes como `<Button` y las importaciones faltantes:
+```js
+import { Button } from "./ui/button";
+import { Loader2 } from "lucide-react";
+
+function LogOutButton() {
+  useState
+  return (
+    <Button>
+      {loading ? <Loader2 className="animate-spin" /> : <span>Log Out</span>}
+    </Button>
+  );
+}
+```
+4. Definimos la constante `loading` como un `useState`, dentro de la 
+función `LogOutButton()`:
+```js
+  const [loading, setloading] = useState(false);
+```
+5. En el tope del código añadimos `"use client";`.
+6. Para verificar el nuevo botón `Log Out`, en el archivo 
+**`Header.txt`**, cambiamos el `const user = null;`, 
+por `const user = 1;`.
+* Así se ve en el browser:  
+![localhost:3000 -> [Log Out]](images/2025-03-20_171745.png "localhost:3000 -> [Log Out]")
+7. Volvemos al archivo **`LogOutButton.tsx`** y al renderizado de 
+`<Button`, le agrego `variant`, `onClick`, `className` y
+`disabled`:
+```js
+    <Button
+      variant="outline"
+      onClick={handleLogOut}
+      className="w-24"
+      disabled={loading}
+    >
+      {loading ? <Loader2 className="animate-spin" /> : <span>Log Out</span>}
+    </Button>
+```
+8. Agregamos la función faltante de `handleLogOut()`:
+```js
+  function handleLogOut() {
+    console.log("Logging out...");
+  }
+```
+9. Mejoramos la función `handleLogOut()`, haciéndola asincrónica y
+los respectivos elementos:
+```js
+  async function handleLogOut() {
+    setloading(true);
+    await new Promise((resolve) => setTimeout(resolve, 1000));
+    setloading(false);
+  }
+```
+* Si le damos clic al botón aparece la imagen del _spin_.
+10. Definimos un `{toast}` usando el _hook_ `useToast()`, 
+que debe importarse de `'@/hooks/use-toast'`:
+```js
+import { useToast } from "@/hooks/use-toast";
+
+function LogOutButton()  {
+  const {toast} = useToast();
+
+  ...
+}
+```
+
+>[!WARNING]  
+>Nos aparece un error en la importación del _hook_ `{ useToast }`,
+>entonces creamos la carpeta **"src/hooks"** y descargamos el archivo 
+>[**`use-toast.ts`**](https://github.com/ColeBlender/goat-notes/blob/main/src/hooks/use-toast.ts) del instructor.
+
+>[!WARNING]  
+>Reviso el archivo descargado de **`use-toast.ts`** y tengo un error
+>pide el componente `toast.tsx`, entonces tocará descargarlo de
+>[**`toaster.tsx`**](https://github.com/ColeBlender/goat-notes/blob/main/src/components/ui/toaster.tsx) y
+>[*`toast.tsx`**](https://github.com/ColeBlender/goat-notes/blob/main/src/components/ui/toast.tsx), para ponerlos en la 
+>carpeta **"src/components/ui"**
+11. Seguimos en **`LogOutButton.tsx`**, ye en la función `handleLogOut()`
+ponemos la constante `errorMessage` y la usamos en un condicional:
+```js
+    const errorMesage = null;
+    if (!errorMesage) {
+      toast({
+        title: "Logged Out",
+        description: "You have been successfully logged out",
+        variant: "success",
+      });
+    }
+```
+12. Verificamos el archivo **`toast.tsx`**, como dice el instructor,
+en la constante `toastVariants`, que si exista en `variant`,
+el valor de :  
+`success: "bg-emerald-700",`.
+13. En el archivo **`LogOutButton.tsx`**, definimos el _hook_
+`useRouter` y lo importamos:
+```js
+...
+import { useRouter } from "next/navigation";
+
+function LogOutButton()  {
+  ...
+  const router = useRouter();
+  ...
+}
+```
+14. Completamos el condicional de `(!errorMesage)`con el `router`
+y el `else`:
+```js
+    if (!errorMesage) {
+      toast({
+        title: "Logged Out",
+        description: "You have been successfully logged out",
+        variant: "success",
+      });
+      router.push("/");
+    } else {
+      toast({
+        title: "Error",
+        description: errorMesage,
+        variant: "destructive",
+      });
+    }
+```
+15. En el archivo **`layout.tsx`**, cambio la importación de
+`Toaster` por:
+```js
+import { Toaster } from "@/components/ui/toaster";
+```
+>[!WARNING]  
+>Sigo hallando errores en el archivo **`toast.tsx`**, relacionado con
+>`"@radix-ui/react-toast";`, entonces abro el archivo **`package.json`**
+> y añado esto en las `"dependencies:"` -> 
+>`"@radix-ui/react-toast": "1.2.5",`,
+>paro el proyecto, escribo el comando en la `TERMINAL`
+>```bash
+>pnpm i
+>```
+> y reinicio el proyecto con `pnpm dev`.
+
+16. Pruebo con el botón de `[Log Out]` y aparece el mensaje verde en la
+parte inferior:  
+![[Log Out] -> success](images/2025-03-20_184302.png "[Log Out] -> success")
+17. En el archivo **`LogOutButton.tsx`**, cambiamos la definición
+de la constante `errorMesage` por `"Error logging out"`, 
+presionamos el botón de `[Log Out]`:  
+![[Log Out] -> destructive](images/2025-03-20_184802.png "[Log Out] -> destructive")
+18. Regresamos el valor de la constante `errorMesage` a `null`.
