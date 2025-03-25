@@ -818,3 +818,339 @@ de la constante `errorMesage` por `"Error logging out"`,
 presionamos el botón de `[Log Out]`:  
 ![[Log Out] -> destructive](images/2025-03-20_184802.png "[Log Out] -> destructive")
 18. Regresamos el valor de la constante `errorMesage` a `null`.
+
+
+## 6. Add Auth Pages (0:22:19)
+
+1. En la carpeta **"src/app"**, creamos la carpea **"login"** y dentro el 
+archivo **`page.tsx`**, y completamos con el _snippet_ `rfce`:
+```js
+import React from "react";
+
+function page() {
+  return <div>page</div>;
+}
+
+export default page;
+```
+2. Cambiamos todo lo que diga `page` por `LoginPage`.
+3. Podemos probar simplemente agregando a la ruta o `URL` la palabra
+`/login`:  
+![localhost:3000/login](images/2025-03-21_143005.png "localhost:3000/login")
+4. Al elemento `<div` le agrego un `className`:
+```js
+function LoginPage() {
+  return (
+    <div className="mt-20 flex flex-1 flex-col items-center">LoginPage</div>
+  );
+}
+```
+5. Del sitio [Card](https://ui.shadcn.com/docs/components/card),
+copiamos el comando para ejecutar en una `TERMINAL`:
+```bash
+pnpm dlx shadcn@latest add dropdown-menu
+```
+```bash
+pnpm dlx shadcn@latest add card
+```
+6. Renderizamos este nuevo componente en vez del texto entre el elemento
+`<div`, también lo debemos importar:
+```js
+import { Card } from "@/components/ui/card";
+...
+function LoginPage() {
+  return (
+    <div className="mt-20 flex flex-1 flex-col items-center">
+      <Card></Card>
+    </div>
+  );
+}
+```
+7. Agregamos un `className` al nuevo renderizado de `<Card`:
+```js
+      <Card className="w-full max-w-md"></Card>
+```
+8. Agregamos en medio del renderizado de `<Card` el elemento
+`<CardHeader`, por ende se añade a la importación de `Card`.
+9. Al elemento `<CardHeader` le agregamos un `className`:
+```js
+      <Card className="w-full max-w-md">
+        <CardHeader className="mb-4"></CardHeader>
+      </Card>
+```
+10. Dentro de `<CardHeader`, renderizamos `<CardTitle` y le ponemos
+en medio la palabra `Login`, también se debe añadir en la importación:
+```js
+      <Card className="w-full max-w-md">
+        <CardHeader className="mb-4">
+          <CardTitle>Login</CardTitle>
+        </CardHeader>
+      </Card>
+```
+11. Ponemos un `className` al elemento `<CardTitle`:
+```js
+          <CardTitle className="text-center text-3xl">Login</CardTitle>
+```
+12. Creamos en la carpeta **"src/components"**, el archivo 
+**`AuthForm.tsx`**, le ponemos el _snippet_ `rfce`:
+```js
+import React from "react";
+
+function AuthForm() {
+  return <div>AuthForm</div>;
+}
+
+export default AuthForm;
+```
+13. Regresamos al archivo **`page.tsx`** de la carpeta **"src/app/login"**, renderizamos el nuevo componente `AuthForm`
+debajo del cierre de `</CardHeader`, y añadimos la respectiva importación:
+```js
+import AuthForm from "@/components/AuthForm";
+...
+
+function LoginPage() {
+  return (
+    <div className="mt-20 flex flex-1 flex-col items-center">
+      <Card className="w-full max-w-md">
+        <CardHeader className="mb-4">
+          ...
+        </CardHeader>
+
+        <AuthForm />
+      </Card>
+    </div>
+  );
+}
+```
+14. Le ponemos una propiedad a `AuthForm` de nombre `type`:
+```js
+        <AuthForm type="login"/>
+```
+>[!WARNING]  
+>El error sale porque falta que el archivo **`AuthForm.tsx`**, 
+> se reciba y defina esa propiedad o parámetro.
+15. De regreso al archivo **`AuthFrom.tsx`**, definimos un `type`
+llamado `Props`:
+```js
+type Props ={
+  type: "login" | "signUp";
+}
+```
+16. Ponemos este parámetro o propiedad en la función `AuthForm()`:
+```js
+function AuthForm({ type }: Props) {
+  return <div>AuthForm</div>;
+}
+```
+17. En el tope de **`AuthFrom.tsx`** le ponemos la directiva 
+`"use client"`, para que se renderice en el lado del cliente.
+18. Añado una constante de nombre `isLoginForm`, dentro de la
+función `AuthForm()`:
+```js
+  const isLoginForm = type === "login";
+```
+19. Añadimos una constante `router`, de tipo `useRouter`, por ende
+debemos importar de `"next/navigation"`:
+```js
+import { useRouter } from "next/navigation";
+...
+function AuthForm({ type }: Props) {
+  ...
+  const router = useRouter();
+  ...
+}
+```
+20. Defino otra constante `{toast}` de `useToast()`, por ende también hago la importación de: `"@/hooks/use-toast"`.
+21. Creamos la función `handleSubmit()`:
+```js
+  function handleSubmit(formData: FormData) {
+    console.log("formData", formData);
+  }
+```
+22. En el `return` de la función `AuthForm()`, hacemos unos
+cambios:
+```js
+  return <form action={handleSubmit}>AuthForm</form>;
+```
+23. Cambiamos el texto en medio de `<form` por el renderizado de
+`<CardContent`, con la respectiva importación de `"./ui/card"`.
+24. Añado en medio del `<CardContent` un elemento `<div`:
+25. Del sitio [Label](https://ui.shadcn.com/docs/components/label),
+copiamos el comando para ejecutar en una `TERMINAL`:
+```bash
+pnpm dlx shadcn@latest add label
+```
+26. Completamos el contenido del `<div` con un `<Label`, que también
+debe importarse de `"./ui/label"`:
+```js
+    <form action={handleSubmit}>
+      <CardContent>
+        <div>
+          <Label htmlFor="email">Email</Label>
+        </div>
+      </CardContent>
+    </form>
+```
+27. Del sitio [Input](https://ui.shadcn.com/docs/components/input),
+copiamos el comando para ejecutar en una `TERMINAL`:
+```bash
+pnpm dlx shadcn@latest add input
+```
+28. Debajo del `<Label`, ponemos un `<Input` y hacemos la respectiva 
+importación de `"./ui/input"`:
+```js
+          <Input id="email" name="email" placeholder="Enter your email" type="email" required />
+```
+29. Añadimos al `<Input` del `email` una propiedad `disabled` que
+depende de `isPending`, que lo debemos definir antes con el _hook_
+`useTransition`:
+```js
+...
+import React, { useTransition } from "react";
+...
+function AuthForm({ type }: Props) {
+  ...
+  const [isPending, startTransition] = useTransition();
+  ...
+  return (
+    <form action={handleSubmit}>
+      <CardContent>
+        <div>
+          <Label htmlFor="email">Email</Label>
+          <Input ... disabled={isPending}
+          />
+        </div>
+      </CardContent>
+    </form>
+  );
+}
+```
+30. Al elemento `<div` del archivo **`AuthFrom.tsx`**, le agregamos un
+`className`:
+```js
+        <div className="flex flex-col space-y-1.5">
+```
+31. Clonamos todo el elemento `<div`, abajo y le hacemos unos cambios:
+```js
+        <div className="flex flex-col space-y-1.5">
+          <Label htmlFor="password">Password</Label>
+          <Input
+            id="password"
+            name="password"
+            placeholder="Enter your password"
+            type="password"
+            required
+            disabled={isPending}
+          />
+        </div>
+```
+32. Añadimos un `className` al renderizado del componente `<<CardConten`:
+```js
+      <CardContent className="grid w-full items-center gap-4">
+```
+
+>[!TIP]  
+>Aquí el instructor sugiere tener instalada la extensión 
+>`Multiple cursor case preserve` de `Cardinal90`, respetando el
+>_camelCase_ o las _MAYÚSCULAS_ o _minúsculas_.
+
+33. Añadimos otro renderizado o llamado de nombre `<CardFooter`,
+junto con la importación de `"./ui/card"`, con al menos un
+`<Button` adentro, este de los componentes ya importados de 
+[`Button`](https://ui.shadcn.com/docs/components/button):
+```js
+import { CardContent, CardFooter } from "./ui/card";
+...
+import { Button } from "./ui/button";
+...
+function AuthForm({ type }: Props) {
+  ...
+  return (
+    <form action={handleSubmit}>
+      <CardContent className="grid w-full items-center gap-4">
+        ...
+      </CardContent>
+      <CardFooter>
+        <Button></Button>
+      </CardFooter>
+    </form>
+  );
+}
+```
+34. Al componente `<Button` le añado un condicional ternario, que incluye un componente `<Loader2` de `"lucide-react"`:
+```js
+        <Button>
+          {isPending ? (
+            <Loader2 className="animate-spin" />
+          ) : isLoginForm ? (
+            "Login"
+          ) : (
+            "Sign Up"
+          )}
+        </Button>
+```
+* Así se ve el aplicativo en el browser:
+![localhost:3000/login](images/2025-03-25_155715.png "localhost:3000/login")
+35. Cuando renderiza el `<Button` le agrego un `className`:
+```js
+        <Button className="w-full">
+```
+36. Al renderizar el `<CardFooter` otro `className`:
+```js
+      <CardFooter className="mt-4 flex flex-col gap-6">
+```
+37. Debajo del cierre del `</Button>`, agrego un elemento `<p>`
+con un `ClassName` y un condicional ternario:
+```js
+        <p className="text-xs">
+          {isLoginForm
+            ? "Don't have an account yet?"
+            : "Already have an account?"}{" "}
+        </p>
+```
+38. Antes del cierre de `</p>`, renderizamos un `<Link`, con un 
+condicional ternario para el `className` y otro para lo que se
+muestra, agregamos la importación de `"next/link"` para `Link`:
+```js
+        <p className="text-xs">
+          {isLoginForm
+            ? "Don't have an account yet?"
+            : "Already have an account?"}{" "}
+          <Link
+            href={isLoginForm ? "/sign-up" : "/login"}
+            className={`text-blue-500 underline ${isPending ? "pointer-events-none opacity-50" : ""}`}
+          >
+            {isLoginForm ? "Sign Up" : "Login"}
+          </Link>
+        </p>
+```
+* Así se ve la página del Login en el browser:  
+![localhost:3000/login + <p>](images/2025-03-25_162400.png "localhost:3000/login + <p>")
+39. Creamos otro archivo de nombre **`sign-up/page.tsx`**,
+en la carpeta **"src/app"** y le copiamos todo lo del 
+**`login/page.tsx`**, con algunos cambios:
+```js
+import AuthForm from "@/components/AuthForm";
+import { Card, CardHeader, CardTitle } from "@/components/ui/card";
+import React from "react";
+
+function SignUpPage() {
+  return (
+    <div className="mt-20 flex flex-1 flex-col items-center">
+      <Card className="w-full max-w-md">
+        <CardHeader className="mb-4">
+          <CardTitle className="text-center text-3xl">Sign Up</CardTitle>
+        </CardHeader>
+
+        <AuthForm type="signUp" />
+      </Card>
+    </div>
+  );
+}
+
+export default SignUpPage
+```
+
+### Actividad final con el link inferior:  
+![localhost:3000 login & sign-up](images/2025-03-25_163515.gif "localhost:3000 login & sign-up")
+ 
