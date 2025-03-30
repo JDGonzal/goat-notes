@@ -1230,21 +1230,78 @@ NEXT_PUBLIC_BASE_URL=http://localhost:3000
 ```bash
 pnpm install -E @supabase/supabase-js @supabase/ssr
 ```
-19. Creamos un archivo **`auth/server.ts`**, en la carpeta
+
+## 8. Add Supabase Code (0:25:48)
+1. Creamos un archivo **`auth/server.ts`**, en la carpeta
 **"src"** y le pegamos el paso 3 del sitio 
 [`Server-Side Auth for Next.js`](https://supabase.com/docs/guides/auth/server-side/nextjs).
 
-20. Creamos en la carpeta **"src"**, el archivo de nombre
+2. Creamos en la carpeta **"src"**, el archivo de nombre
 **`middleware.ts`** y le pegamos los dos del paso 4 del sitio 
 [`Server-Side Auth for Next.js`](https://supabase.com/docs/guides/auth/server-side/nextjs).
-21. En el archivo **'middleware.ts'**, ponemos los `import` arriba
+3. En el archivo **'middleware.ts'**, ponemos los `import` arriba
 y corregimos la ruta que está presentando fallas:
 ```js
 import { NextResponse, type NextRequest } from "next/server";
 //import { updateSession } from "@/utils/supabase/middleware";
 import { createServerClient } from "@supabase/ssr";
 ```
-22. Quitamos las `options` del primer 
+4. Quitamos las `options` del primer 
 `cookiesToSet.forEach(({ name, value, options }) =>`.
+5. Corregimos en el archivo **'middleware.ts'** los valores de 
+`process.env.`, por los que están en **`.env.local`**:
+```js
+  ...
+  const supabase = createServerClient(
+    process.env.SUPABASE_URL!,
+    process.env.SUPABASE_ANON_KEY!,
+    {...},
+  );
+```
+6. Hacemos lo mismo en el archivo **`auth/server.ts`**:
+```js
+  ...
+  return createServerClient(
+    process.env.SUPABASE_URL!,
+    process.env.SUPABASE_ANON_KEY!,
+    {...},
+  );
+```
+7. Comento debajo de `// IMPORTANT: DO NOT REMOVE auth.getUser()`
+hasta nates de `// IMPORTANT: You *must* return the`, en el archivo **'middleware.ts'**
+8. Comentamos también todo lo relacionado con
+`const supabase = createServerClient(`. y lo sustituimos por
+un `console.log`:
+```js
+  console.log("middleware ran");
+```
+9. Para probar el texto, intercambiamos con el link de `login` a
+`Sign Up` y vemos el resultado en la `TERMINAL` de 
+`Visual Studio Code`.
+10. Regresamos al archivo **`auth/server.ts`** y hacemos estos cambios:
+```js
+...
+export async function createClient() {
+  ...
+  const client = createServerClient(
+    ...
+  );
 
- 
+  return client;
+}
+```
+11. Creamos una función de nombre `getUser()`, para ser exportada:
+```js
+export async function getUser() {
+  const { auth } = await createClient();
+
+  const userObject = await auth.getUser();
+
+  if (userObject.error) {
+    console.error(userObject.error);
+    return null;
+  }
+
+  return userObject.data.user;
+}
+```
