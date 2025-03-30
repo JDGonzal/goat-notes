@@ -1153,4 +1153,98 @@ export default SignUpPage
 
 ### Actividad final con el link inferior:  
 ![localhost:3000 login & sign-up](images/2025-03-25_163515.gif "localhost:3000 login & sign-up")
+
+
+## 7. Create Supabase Project (0:32:12)
+
+>[!TIP]  
+> Debemos ingresar a la página de [supabase](https://supabase.com/dashboard), y crear una cuenta con  `github`:
+>
+>![Supabase con Github](images/2025-03-29_144114.gif "Supabase con Github")
+
+1. Entramos al sitio [supabase](https://supabase.com/dashboard).
+2. Si nos falta o no tenemos la _Organization_ de nombre `Tutorials`, 
+damos clic al botón `[New Organization]` y le ponemos de nombre
+`Tutorials` y damos clic en el botón `[Create Organization]`:  
+![Create a new organization](images/2025-03-29_154115.png "Create a new organization")
+3. Regresamos al [supabase/dashboard](https://supabase.com/dashboard)
+4. Damos clic al boton de `[New Project]` y dejamos la _Organization_ 
+de nombre `Tutorials`.
+5. Completamos el formulario:
+    * Organization: `Tutorials`
+    * Project-name: `giat-notes`
+    * Database password: ~~xoxoxoxo~~ (Usamos una buena contraseña)
+    * Region: `East US (Nort Virginia)`
+* Así se ve el formulario:  
+![Create new project](images/2025-03-29_154939.png "Create new project")
+6. Y le damos clic en el botón `[Create new project]`:  
+![project: goat-notes](images/2025-03-29_160216.png "project: goat-notes")
+
+7. Regresamos a `Visual Studio Code` y creamos un archivo en la 
+raíz del proyecto de nombre **`.env.local`** (ojo que empieza con un
+punto `.`), con esta información:
+```ini
+DB_PASSWORD=xoxoxoxo
+```
+>[!CAUTION]  
+>### Reemplazamos el `xoxoxoxo` del archivo **`env.local`**, por la contraseña que usamos cuando creamos el _Project_ en el paso 5.
+8. Regresamos al sitio [projects](https://supabase.com/dashboard/projects) y seleccionamos el projecto
+que estamos trabajando `goat-notes`.
+9. Damos clic en el botón ![](images/2025-03-29_161402.png) y nos vamos abajo al `Session pooler`, copiamos este texto que empieza con
+`postgresql://postgres.` y termina con `@aws-0-us-east-1.pooler.supabase.com:5432/postgres` y lo pegamos en el nuevo
+archivo **`.env.local`**, con el nombre de `DATABASE_URL`:
+```ini
+DATABASE_URL=postgresql://postgres...@aws-0-us-east-1.pooler.supabase.com:5432/postgres
+```
+10. Copiamos el valor de `DB_PASSWORD=` en el espacio de `[YOUR-PASSWORD]` y borramos la línea donde esta `DB_PASSWORD=`.
+11. En el Sitio [goat-notes](https://supabase.com/dashboard), 
+y cerramos la ventana de `Connect to your project` y abrimos el 
+menú de la izquierda para buscar `Project Settings`:  
+![Project Settings](images/2025-03-29_174059.png "Project Settings")
+* Busco el de `Database`.
+12. Damos clic en `API` o `Data API`:
+![API o Data API](images/2025-03-29_174928.png "API o Data API")
+13. Copiamos el contenido de la `URL` y la pegamos en el archivo
+**`.env.local`** con el nombre de `SUPABASE_URL`:
+```ini
+SUPABASE_URL=https://... .supabase.co
+```
+14. Copiamos `Project API Keys` el `anon` `public`, en la
+variable: `SUPABASE_ANON_KEY`:
+```ini
+SUPABASE_ANON_KEY=X0X0X0X0X0
+```
+15. Creamos la variable `NEXT_PUBLIC_BASE_URL`, en el archivo **`.env.local`**:
+```ini
+NEXT_PUBLIC_BASE_URL=http://localhost:3000
+```
+16. Vamos dentro de `Settings` a `Authentication` y damos clic a 
+`General user signup`:
+![Sign In/Up](images/2025-03-29_180656.png "Sign In/Up")
+* Que Este activo `Allow new users to sign up`.
+* Y `Email`.
+17. Buscamos la guía para configurar `Supabase` para 
+[`Server-Side Auth for Next.js`](https://supabase.com/docs/guides/auth/server-side/nextjs):  
+![Server-Side Auth for Next.js](images/2025-03-29_182720.png "Server-Side Auth for Next.js")
+18. Copiamos, ajustamos y ejecutamos en una `TERMINAL` de `Visual Studio Code`:
+```bash
+pnpm install -E @supabase/supabase-js @supabase/ssr
+```
+19. Creamos un archivo **`auth/server.ts`**, en la carpeta
+**"src"** y le pegamos el paso 3 del sitio 
+[`Server-Side Auth for Next.js`](https://supabase.com/docs/guides/auth/server-side/nextjs).
+
+20. Creamos en la carpeta **"src"**, el archivo de nombre
+**`middleware.ts`** y le pegamos los dos del paso 4 del sitio 
+[`Server-Side Auth for Next.js`](https://supabase.com/docs/guides/auth/server-side/nextjs).
+21. En el archivo **'middleware.ts'**, ponemos los `import` arriba
+y corregimos la ruta que está presentando fallas:
+```js
+import { NextResponse, type NextRequest } from "next/server";
+//import { updateSession } from "@/utils/supabase/middleware";
+import { createServerClient } from "@supabase/ssr";
+```
+22. Quitamos las `options` del primer 
+`cookiesToSet.forEach(({ name, value, options }) =>`.
+
  
