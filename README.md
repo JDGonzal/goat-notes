@@ -1231,7 +1231,7 @@ NEXT_PUBLIC_BASE_URL=http://localhost:3000
 pnpm install -E @supabase/supabase-js @supabase/ssr
 ```
 
-## 8. Add Supabase Code (0:25:48)
+## 8. Add Supabase Code (0:35:48)
 1. Creamos un archivo **`auth/server.ts`**, en la carpeta
 **"src"** y le pegamos el paso 3 del sitio 
 [`Server-Side Auth for Next.js`](https://supabase.com/docs/guides/auth/server-side/nextjs).
@@ -1305,3 +1305,182 @@ export async function getUser() {
   return userObject.data.user;
 }
 ```
+
+## 9. Add Auth Code Logic (0:40:52)
+
+1. En el componente **`AuthForm.tsx`**, en la función 
+`handleSubmit()`, cambiamos el `console.log()`, por este código:
+```js
+  function handleSubmit(formData: FormData) {
+    startTransition(async() => {});
+  }
+```
+2. Dentro de la función `handleSubmit(` completamos el
+`startTransition()` cpturando los datos de `formData` y creando
+tres variables:
+```js
+      const email = formData.get("email") as string;
+      const password = formData.get("password") as string;
+
+      let errorMessage = null;
+      let title = null;
+      let description = null;
+```
+3. Creamos una condicional con dos elementos `Action` para crear mas tarde:
+```js
+
+      if (isLoginForm) {
+        errorMessage = (await loginAction(email, password)).errorMessage;
+        title = "Logged in";
+        description = "You have been successfully logged in";
+      } else {
+        errorMessage = (await signUpAction(email, password)).errorMessage;
+        title = "Signed up";
+        description = "Check your email for a confirmation Link";
+      }
+```
+
+>![!WARNING]  
+>Los errores son:
+>* Cannot find name loginAction .
+>* Cannot find name signUpAction .
+
+4. Agregamos otro condicional para mostrar mensajes tipo `toast`:
+```js
+      if (!errorMessage) {
+        toast({
+          title,
+          description,
+          variant: "success",
+        });
+        router.replace("/"); // En vez de redirigir a la pagina principal, redirigir a la pagina de confirmacion de correo
+      } else {
+        toast({
+          title: "An error occurred",
+          description: errorMessage,
+          variant: "destructive",
+        });
+      }
+```
+5. Creamos un archivo en la carpeta **"src"** de nombre 
+**`actions/users.ts`**, con este código:
+```js
+"use server";
+
+import { createClient } from "@/auth/server";
+
+export async function loginAction(email: string, password: string) {
+  try {
+    const { auth } = await createClient();
+    const { error } = await auth.signInWithPassword({ email, password });
+    if (error) throw error;
+
+    return { errorMessage: null };
+  } catch (error) {
+    return handleError(error);
+  }
+}
+```
+6. Por el error de `handleError`, creamos en el archivo 
+**`lib/utils.ts`**, cramos la función `handleError()` que sea
+exportada:
+```js
+export function handleError(error: unknown) {
+  if (error instanceof Error) {
+    return { errorMessage: error.message };
+  } else {
+    return { errorMessage: "An error occurred" };
+  }
+}
+```
+7. Regresamos a **`actions/users.ts`** e importamos la 
+función:
+```js
+import { handleError } from "@/lib/utils";
+```
+8. Clonamos en **`actions/users.ts`**, la función `loginAction()`
+con el nombre de `signUpAction()`, con estos ajustes:
+```js
+export async function signUpAction(email: string, password: string) {
+  try {
+    const { auth } = await createClient();
+    const { data, error } = await auth.signUp({ email, password });
+    if (error) throw error;
+
+    const userId =data.user?.id;
+    // Acá estamos usando los usuarios de Supabase
+    if (!userId) throw new Error("Error signing up");  
+
+    // Add user to database
+
+    return { errorMessage: null };
+  } catch (error) {
+    return handleError(error);
+  }
+```
+9. Regresamos al componente **`AuthForm.tsx`** y ponemos las 
+importaciones faltantes:
+```js
+import { loginAction, signUpAction } from "@/actions/users";
+```
+10. Antes de Probar, debemos ir al arhivo **`Header.tsx`** y poner la 
+función `Header()`de forma `async` y cambiar el valor de `user`:
+```js
+...
+import { getUser } from "@/auth/server";
+
+async function Header() {
+  const user = await getUser();
+
+  return (
+    ...
+  );
+}
+```
+>[!WARNING]  
+>Lo anterior arrojará un error en la `TERMINAL`:
+>```bash
+>Error [AuthSessionMissingError]: Auth session missing!
+>    at <unknown> (../../src/GoTrueClient.ts:1210:48)
+>    at SupabaseAuthClient._useSession (../../src/GoTrueClient.ts:1065:19)
+>    at async SupabaseAuthClient._getUser (../../src/GoTrueClient.ts:1202:13)
+>    at async (../../src/GoTrueClient.ts:1186:13)
+>    at async (../../src/GoTrueClient.ts:973:17) {
+>  __isAuthError: true,
+>  status: 400,
+>  code: undefined
+>}
+>```
+
+>[!NOTE]  
+>Este es un ejemplo de ejecución ya permitiendo crear un usuario 
+>para luego usarlo en el proceso de _login_:  
+>![Sign-Up/Login](images/2025-03-31_183212.gif "Sign-Up/Login")
+
+11. Regresamos al archivo **`actions/users.ts`**, creamos una nueva
+función de nombre `logOutAction()`:
+```js
+export async function logOutAction() {
+  try {
+    const { auth } = await createClient();
+    const { error } = await auth.signOut();
+    if (error) throw error;
+
+    return { errorMessage: null };
+  } catch (error) {
+    return handleError(error);
+  }
+}
+```
+12. Buscamos el componente **`LogOutButton.tsx`**, borramos esto:  
+`await new Promise((resolve) => setTimeout(resolve, 1000));`.
+13. Cambiamos esto: `const errorMesage = null;` por esto:
+```js
+    const { errorMessage } = await logOutAction();
+```
+* Se corrige el uso del nombre correcto de la constante
+`errorMessage`.
+
+14. Se presiona el botón `[Log Out]`, se cierra la sesión del usuario
+y muestra abajo este mensaje:  
+![Logged Out"](images/2025-03-31_190841.png "Logged Out")
