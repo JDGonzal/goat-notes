@@ -1483,4 +1483,185 @@ export async function logOutAction() {
 
 14. Se presiona el botón `[Log Out]`, se cierra la sesión del usuario
 y muestra abajo este mensaje:  
-![Logged Out"](images/2025-03-31_190841.png "Logged Out")
+![Logged Out](images/2025-03-31_190841.png "Logged Out")
+
+
+## 10. Add Prisma Code (0:50:02)
+
+1. Empezamos en este sition [`What is Prisma ORM?`](https://www.prisma.io/docs/orm/overview/introduction/what-is-prisma),
+y bajamos a la parte de [`How does Prisma ORM work?`](https://www.prisma.io/docs/orm/overview/introduction/what-is-prisma#how-does-prisma-orm-work), le damos copiar al texto que
+corresponde a `Relational databases`.
+2. Creamos en la carpeta **"src"** un archivo de nombre 
+**`db/schema.prisma`** y pegamos lo que copiamos antes.
+3. Verificamos que las variables en el **`db/schema.prisma`**,
+sean las mismas del archivo **`.env.local`**.
+4. Hacemos unos cambios en el archivo **`db/schema.prisma`**:
+```ini
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model Note {
+  id        String    @id @default(uuid())
+  text      String
+  author    User?     @relation(fields: [authorId], references: [id])
+  authorId  String?
+  creationAt DateTime @default(now())
+  updateAt  DateTime  @updatedAt   @default(now())
+}
+
+model User {
+  id        String    @id @default(uuid())
+  email     String    @unique
+  posts     Note[]
+  creationAt DateTime @default(now())
+  updateAt  DateTime  @updatedAt   @default(now())
+}
+```
+>[!CAUTION]
+>### Mucho cuidado al usar el nombre del campo `updateAt` y la función `@updatedAt`, es con la `d`, en pasado.
+5. Creamos en la carpeta **"src/db"** el archivo **`db/prisma.ts`**
+y le copiamos los dato de este sitio [Best practices for using Prisma Client in development](https://www.prisma.io/docs/orm/more/help-and-troubleshooting/nextjs-help#best-practices-for-using-prisma-client-in-development).
+
+>[!WARNING]  
+>Nos sale este error en el archivo **`db/prisma.ts`**:
+>```diff
+>-Cannot find module '@prisma/client' or its corresponding type declarations.. 
+>```
+
+6. Vamos a la `TERMINAL` y ejecutamos este comando:
+```bash
+pnpm add @prisma/client -E
+pnpm install prisma --save-dev -E
+```
+8. Abrimos el archivo **`package.json`** y añadimos una línea en la
+zona de `"scripts":`:
+```json
+{
+  "name": "goat-notes",
+  "version": "0.1.0",
+  "private": true,
+  "scripts": {
+    ...
+    "migrate": "pnpm dlx prisma generate && env $(cat .env.local | xargs) pnpm dlx prisma migrate dev"
+  },
+  "prisma": {
+    "schema": "src/db/schema.prisma"
+  },
+  "dependencies": {
+    ...
+  },
+  "devDependencies": {
+    ...
+  }
+}
+```
+9. En el archivo **`db/prisma.ts`**, sigue el error, entonces en la
+`TERMINAL` ejecutamos este comando:
+```bash
+pnpm migrate
+```
+
+>[!CAUTION]  
+>### Error ejecutando el comando de `pnpm migrate`
+>```Diff
+>-npm error could not determine executable to run
+>-npm error A complete log of this run can be found in: ...    
+>-ELIFECYCLE  Command failed with exit code 1.
+>```
+>En este sitio hallé mucha de la solución a este error:  
+>[![Prisma Migrations: A Step-by-Step Guide](images/2025-04-02_153906.png "Prisma Migrations: A Step-by-Step Guide")](https://www.youtube.com/watch?v=ZaCFsFES5yQ)
+>
+>En Windows se requieren hacer mas pasos:
+>1. Instalar la librería `dotenv-cli`:
+>```bash
+>pnpm add dotenv-cli -D -E
+>```
+>2. Se ajustó el `"scripts":` de **`package.json`**, para quedar
+>así:
+>```json
+>{
+>  ...
+>  "scripts": {
+>    ...
+>    "prisma:generate": "prisma generate --schema=./src/db/schema.prisma",
+>    "prisma:migrate": "dotenv -e ./.env.local prisma migrate dev",
+>    "migratebash": "pnpm dlx prisma generate && env $(cat .env.local | xargs) pnpm dlx prisma migrate dev"
+>  },
+>  "prisma": {
+>    "schema": "src/db/schema.prisma"
+>  },
+>  ...
+>}
+>```
+>3. Se ejectutan por aparte dos comandos en la `TERMINAL`,
+>el primero:
+>```bash
+>pnpm prisma:generate
+>```
+>4. Crea un valor mas en el **`package.json`** de nombre 
+>`"goat-notes"`:  
+>```json
+>  "dependencies": {
+>    ...
+>    "goat-notes": "file:",
+>    ...
+>  },
+>```
+>5. Y esta info en la `TERMINAL`:
+>```bash
+>Prisma schema loaded from src\db\schema.prisma
+>
+>✔ Generated Prisma Client (v6.5.0) to .\node_modules\.pnpm\@prisma+client@6.5.0_prisma_fccffc52d17c43e****\node_modules\@prisma\client in 103ms
+>
+>Start by importing your Prisma Client (See: https://pris.ly/d/importing-client)
+>```
+>6. Siguiente comando en la `TERMINAL`
+>```bash
+>pnpm prisma:migrate
+>```
+>7. Esto aparece en la `TERMINAL`, pide un dato y simplemente le
+>escribimos `init`
+>```bash
+>Prisma schema loaded from src\db\schema.prisma
+>Datasource "db": PostgreSQL database "postgres", schema "public" at "aws-0-us-east-1.pooler.supabase.com:5432"
+>
+>? Enter a name for the new migration: »
+>```
+>8. Esto aparece en la `TERMINAL`, luego de digitar `init`:
+>```dos
+>Applying migration `20250402201517_init`
+>
+>The following migration(s) have been created and applied from new schema changes:
+>
+>migrations/
+>  └─ 20250402201517_init/
+>    └─ migration.sql
+>
+>Your database is now in sync with your schema.
+>
+>✔ Generated Prisma Client (v6.5.0) to .\node_modules\.pnpm\@prisma+client@6.5.0_prisma_fccffc52d17c43efe****\node_modules\@prisma\client in 116ms
+>```
+>9. En la carpeta **"src/db"**, tenemos una nueva carpeta de nombre
+>**"migrations"** y dentro otras carpetas y archivos, se sugiere 
+>no editar ni modificar.
+>10. Vamos al sitio de nuestra base de datos en 
+>[Supabase/Projects](https://supabase.com/dashboard/projects) y
+>vemos que nos parecen tablas nuevas:  
+>![Database Tables](images/2025-04-02_153001.png "Database Tables")
+>
+
+10. En el archivo **`actions/users.ts`** añadimos a la función
+`signUpAction()`, antes del `return` y debajo de 
+`// Add user to database` lo siguiente:
+```js
+    await prisma.user.create({ data: { id: userId, email } });
+```
+* Así sería la prueba a realizar y verificación en la tabla `user`:  
+![prisma.user.create()](images/2025-04-02_172932.gif "prisma.user.create()")
+
