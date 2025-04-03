@@ -1174,7 +1174,7 @@ de nombre `Tutorials`.
     * Organization: `Tutorials`
     * Project-name: `giat-notes`
     * Database password: ~~xoxoxoxo~~ (Usamos una buena contraseña)
-    * Region: `East US (Nort Virginia)`
+    * Region: `East US (North Virginia)`
 * Así se ve el formulario:  
 ![Create new project](images/2025-03-29_154939.png "Create new project")
 6. Y le damos clic en el botón `[Create new project]`:  
@@ -1665,3 +1665,237 @@ pnpm migrate
 * Así sería la prueba a realizar y verificación en la tabla `user`:  
 ![prisma.user.create()](images/2025-04-02_172932.gif "prisma.user.create()")
 
+
+## 11. Build Sidebar (0:58:35)
+
+1. Empezamos teniendo como punto de referencia este sitio
+[Sidebar](https://ui.shadcn.com/docs/components/sidebar), y vamos para el punto `2 Add the following colors to your CSS file` y 
+lo comparamos con el archivo **`global.css`** y vemos que ya
+tiene lo datos cargados previamente.
+2. En una `TERMINAL`, del sitio [Sidebar](https://ui.shadcn.com/docs/components/sidebar) 
+ejecutamos el comando:
+```bash
+pnpm dlx shadcn@latest add sidebar -E
+```
+3. De mismo sitio abajo en `Usage`, detallamos su forma de uso,
+y abrimos el archivo **`layout.tsx`** y envolvemos todo el 
+elemento `<div`, con `<SidebarProvider>`:
+```js
+          <SidebarProvider>
+            <div className="flex min-h-screen w-full flex-col">
+              <Header />
+              <main className="flex flex-1 flex-col px-4 pt-10 xl:px-8">
+                {children}
+              </main>
+            </div>
+          </SidebarProvider>
+```
+* Importar el datos realcionado `import { SidebarProvider } from "@/components/ui/sidebar";`
+4. Debajo de la apertura de `<SidebarProvider>`, ponemos este
+componente: `<AppSidebar />`.
+>[!WARNING]  
+>Nos aparece este error:
+>```diff
+>-Cannot find name 'AppSidebar'.
+>```
+5. Creamos en la carpeta **"src/components"** el archivo de nombre
+**`AppSidebar.tsx`** y del sitio [Sidebar](https://ui.shadcn.com/docs/components/sidebar)
+en la parte `components/app-sidebar.tsx` copiamos y pegamos en
+el nuevo archivo:
+```js
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarHeader,
+} from "@/components/ui/sidebar"
+
+export function AppSidebar() {
+  return (
+    <Sidebar>
+      <SidebarHeader />
+      <SidebarContent>
+        <SidebarGroup />
+        <SidebarGroup />
+      </SidebarContent>
+      <SidebarFooter />
+    </Sidebar>
+  )
+}
+```
+6. Regresamos al archivo **`layout.tsx`** y ponemos la importación
+del nuevo componente:
+```js
+import { AppSidebar } from "@/components/AppSidebar";
+```
+* Así nos aparece el browser hasta el momento:  
+![Sidebar](images/2025-04-03_111424.png "Sidebar")
+
+7. Hacemos algunos ajustes al componente **`AppSidebar.tsx`**:
+```js
+import {
+  Sidebar,
+  SidebarContent,
+  SidebarFooter,
+  SidebarGroup,
+  SidebarHeader,
+} from "@/components/ui/sidebar";
+
+async  function AppSidebar() {
+  return (
+    <Sidebar>
+      <SidebarHeader />
+      <SidebarContent>
+        <SidebarGroup />
+        <SidebarGroup />
+      </SidebarContent>
+      <SidebarFooter />
+    </Sidebar>
+  );
+}
+
+export default AppSidebar;
+```
+8. Debemos borrar la importación `import { AppSidebar } from "@/components/AppSidebar";` y volver a importar:
+```js
+import AppSidebar from "@/components/AppSidebar";
+```
+9. Empezamos añadiendo a la función `AppSidebar()`, algunos 
+cambios, antes del `return`, con las respectivas importaciones:
+```js
+import { getUser } from "@/auth/server";
+...
+import { prisma } from "@/db/prisma";
+import { Note } from "@prisma/client";
+
+async  function AppSidebar() {
+  const user = await getUser(); // "@/auth/server"
+
+  let notes : Note[] = []; // "@prisma/client"
+
+  if (user){ // Conditicional para verificar si el usuario existe
+    // Query para traer las notas del usuario
+    notes = await prisma.note.findMany({ // "@/db/prisma", 
+      where: {
+        authorId: user.id,
+      },
+      orderBy: {
+        updateAt: "desc",
+      },
+    });
+  }
+
+  return (...);
+}
+...
+```
+10. Borramos del componente **`AppSidebar.tsx`**, la línea de
+`<SidebarHeader />` y la respectiva importación.
+11. Agregamos un `className` al renderizado o llamado del componente
+`<SidebarContent`:
+```js
+      <SidebarContent className="custom-scrollbar">
+```
+12. Ajustamos el renderizado o llamado de `<SidebarGroup` para dejar
+uno solo, llamando otro componente `<SidebarGroupLabel` y la 
+respectiva importación:
+```js
+        <SidebarGroup>
+          <SidebarGroupLabel></SidebarGroupLabel>
+        </SidebarGroup>
+```
+13. Ponemos un condicional ternario dentro del renderizado de 
+`<SidebarGroupLabel`:
+```js
+          <SidebarGroupLabel>
+            {user ? (
+              "Your Notes"
+            ) : (
+              <p>
+                <Link href="/login" className="underline">
+                  Login
+                </Link>{" "}
+                to see your notes
+              </p>
+            )}
+          </SidebarGroupLabel>
+```
+* El `<Link` lo importamos de `"next/link"`.
+14. Al renderizado de `<SidebarGroupLabel`, le agregamos un 
+`className`:
+```js
+          <SidebarGroupLabel className="mt-2 mb-2 text-lg">
+```
+15. Debajo del cierre de `</SidebarGroupLabel>`, ponemos esto:
+```js
+        <SidebarGroup>
+          <SidebarGroupLabel {...}>
+           ...
+          </SidebarGroupLabel>
+          {user && <SidebarGroupContent notes={notes} />}
+        </SidebarGroup>
+```
+>[!WARNING]  
+>En la línea de `{user && <SidebarGroupContent notes={notes} />}`
+>nos sale un error relacionado con `notes`
+>```diff
+>-Type '{ notes: { id: string; text: string; authorId: string | null; creationAt: Date; updateAt: Date; }[]; }' is not assignable to type 'IntrinsicAttributes & ClassAttributes<HTMLDivElement> & HTMLAttributes<HTMLDivElement>'.
+  Property 'notes' does not exist on type 'IntrinsicAttributes & ClassAttributes<HTMLDivElement> & HTMLAttributes<HTMLDivElement>'
+>``` 
+16. Borramos la importación de `SidebarGroupContent`.
+17. Creamos en la carpeta **"src/components"** el archivo de nombre
+**`SidebarGroupContent.tsx`**, con el _snippet_ de `rfce`:
+```js
+import React from "react";
+
+function SidebarGroupContent() {
+  return <div>SidebarGroupContent</div>;
+}
+
+export default SidebarGroupContent;
+```
+18. Cambiamos la `import React from "react";` por 
+`"use client";`.
+19. Añadimos un `Type Props` y la importación `"@prisma/client"`:
+```js
+"use client";
+
+import { Note } from "@prisma/client";
+
+type Props = {
+  notes: Note[]; // "@prisma/client"
+};
+
+function SidebarGroupContent(notes: Props) {
+  return <div>SidebarGroupContent</div>;
+}
+
+export default SidebarGroupContent;
+```
+20. Regresamos al componente **`AppSidebar.tsx`** y corregimos la 
+importación faltante de `<SidebarGroupContent`.
+```js
+import SidebarGroupContent from "./SidebarGroupContent";
+```
+21. Regresamos al nuevo componente **`SidebarGroupContent.tsx`**,
+para efectuar estos cambios:
+```js
+"use client";
+
+import { Note } from "@prisma/client";
+
+type Props = {
+  notes: Note[]; // "@prisma/client"
+};
+
+function SidebarGroupContent(notes: Props) {
+  console.log(notes);
+  return <div>Your notes here</div>;
+}
+
+export default SidebarGroupContent;
+```
+
+>[!TIP]  
+>### Abrir el archivo **`package.json`** y borra todos los _carets_ (`^`).
