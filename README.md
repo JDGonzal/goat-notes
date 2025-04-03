@@ -1899,3 +1899,158 @@ export default SidebarGroupContent;
 
 >[!TIP]  
 >### Abrir el archivo **`package.json`** y borra todos los _carets_ (`^`).
+
+## 12. Build Home Page (1:04:25)
+
+1. En el archivo **`app/page.tsx`**, agregamos un
+`className`:
+```js
+    <div className="flex h-full flex-col items-center gap-4">
+```
+2. El texto de `HomePage` lo cambiamos por un `<div` mas un
+`className`:
+```js
+function HomePage() {
+  return (
+    <div className="flex h-full flex-col items-center gap-4">
+      <div className="flex w-full max-w-4xl justify-end gap-2"></div>
+    </div>
+  );
+}
+```
+3. Renderizo dos componentes dentro del `<div` interno, y otro 
+componente antes de cerrar el `<div` externo:
+```js
+  return (
+    <div className="flex h-full flex-col items-center gap-4">
+      <div className="flex w-full max-w-4xl justify-end gap-2">
+        <AskAIButton user={user} />
+        <NewNoteButton user={user} />
+      </div>
+
+      <NoteTextInput noteId={noteId} startingNoteText={note?.text || ""} />
+    </div>
+  );
+```
+
+>[!WARNING]  
+>No salen errores por que no existen los componentes:
+>* `<AskAIButton `
+>* `<NewNoteButton`
+>* `<NoteTextInput`
+
+4. La función `function HomePage()`, la hacemos `async` y en una
+constante capturamos el `getUser()`:
+```js
+async function HomePage() {
+  const user = await getUser(); // "@/auth/server"
+  ...
+  );
+}
+```
+5. Creamos otra constante de nombre `noteIdParam`:
+```js
+  const noteIdParam = (await searchParams).noteId;
+```
+6. A la función le agregamos un `{searchParams}` de tipo `Props`,
+que a su vez lo definimos antes:
+```js
+...
+type Props = {
+  searchParams: any;
+};
+
+async function HomePage({ searchParams }: Props) {
+  ...
+}
+...
+```
+7. Definimos mejor el contenido del tipo para `searchParams`:
+```js
+type Props = {
+  searchParams: Promise<{ [key: string]: string | string[] | undefined }>;
+};
+```
+8. Definimos dentro de la función la constante `noteId`,
+con un ternario:
+```js
+  const noteId = Array.isArray(noteIdParam)
+    ? noteIdParam![0]
+    : noteIdParam || "";
+```
+9. Definimos la constante `note`, importamos a `prisma` de
+`"@/db/prisma"`, para hacer un query para obtener las `note`:
+```js
+  const note = await prisma.note.findUnique({ // "@/db/prisma"
+    where: { id: noteId, authorId: user?.id },
+  });
+```
+10. Creamos en la ruta **"src/components"** uno de los componentes
+faltantes de nombre **`AskAIButton.tsx`**, y lo completamos
+con el _snippet_ de `rfce`:
+```js
+import React from "react";
+
+function AskAIButton() {
+  return <div>AskAIButton</div>;
+}
+
+export default AskAIButton;
+```
+11. Cambiamos `import React from "react";` por `"use client";`.
+12. Definimos un `type Props` y lo ponemos como parámetro a la 
+función:
+```js
+...
+import { User } from "@supabase/supabase-js";
+
+type Props = { user: User | null} ; // "@supabase/supabase-js"
+
+function AskAIButton({user}: Props) {
+  console.log("AskAIButton", user.email);
+  return <div>AskAIButton</div>;
+}
+```
+13. En el componente **`app/page.tsx`**, importamos el nuevo componente.
+14. Para no dejar el componente  **`app/page.tsx`**, con tantos 
+errores, creamos en la misma carpeta **"src/components"**, 
+dos componentes con datos muy básicos,
+con los nombres **`NewNoteButton.tsx`** y **`NoteTextInput.tsx`**:
+* **`NewNoteButton.tsx`**:
+```js
+"use client";
+
+import { User } from "@supabase/supabase-js";
+
+type Props = { user: User | null} ; // "@supabase/supabase-js"
+
+function NewNoteButton({user}: Props) {
+  console.log("NewNoteButton", user?.email);
+  return <div>NewNoteButton</div>;
+}
+
+export default NewNoteButton;
+```
+* **`NoteTextInput.tsx`**:
+```js
+"use client";
+
+type Props = {
+  noteId: string;
+  startingNoteText: string;
+};
+
+function NoteTextInput({ noteId, startingNoteText }: Props) {
+  console.log("NoteTextInput", noteId, startingNoteText);
+  return <div>NoteTextInput</div>;
+}
+
+export default NoteTextInput;
+```
+15. Completamos la importación de todos los elementos en el 
+componente **`app/page.tsx`*:
+```js
+import AskAIButton from "@/components/AskAIButton";
+import NewNoteButton from "@/components/NewNoteButton";
+import NoteTextInput from "@/components/NoteTextInput";
+```
