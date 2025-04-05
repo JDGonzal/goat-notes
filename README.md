@@ -2054,3 +2054,56 @@ import AskAIButton from "@/components/AskAIButton";
 import NewNoteButton from "@/components/NewNoteButton";
 import NoteTextInput from "@/components/NoteTextInput";
 ```
+
+## 13. Set Up OpenAI Account (1:09:11)
+
+1. Empezamos ingresando a este sitio [OpenIA - API Platform](https://openai.com/api/).
+2. En la esquina superior derecha escogemos del `[Log in]`
+la opción de `API Platform`.
+3. No abre una ventana para completar el [Log in](https://auth.openai.com/log-in), se sugiere utilizar
+el de `Google`:  
+![OpenAI/log-in](images/2025-04-04_103406.png "OpenAI/log-in")
+
+
+4. Nos lleva a la página de `OpenAI developer platform`:  
+![OpenAI platform](images/2025-04-04_103840.png "OpenAI platform")
+
+
+5. En esta versión le damos en el botón `[Start building]` y nos pide 
+lo siguiente:  
+![Organization name](images/2025-04-04_112634.png "Organization name")
+* Ponemos cuqlquier nombre o simplemente `Personal` y en la segunda 
+casilla la de `Very Technical` y clic en el botón 
+`[Create Organization]`
+
+
+6. En la parte de correos, poner otros que les interese tu 
+definición o simplemente dejar en blanco.
+
+
+7. Nos pide `Make your first API call` para generar el `API Key`:  
+![Make your first API call](images/2025-04-04_113533.png "Make your first API call")
+* Usamos el nombres de:
+    * `Api key name`: `GOAT Notes Ref API Key`.
+    * `Project name`: `goat-notes`
+  
+
+8. Luego de darle clic en el botón `[Generate API Key]`, nos pide hacer una prueba, con el valor de dicha API:  
+![Make your first API call](images/2025-04-04_115028.png "Make your first API call")
+
+
+9. Al final te sugiere comprar créditos, yo simplemente le di 
+`I'll buy credits later`:  
+![Add some API credits](images/2025-04-04_121403.png "Add some API credits")
+
+
+10. Estando en el proyecto `goat-notes`, ingresamos al ícono del piñón o engranaje
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-gear" viewBox="0 0 16 16">
+  <path d="M8 4.754a3.246 3.246 0 1 0 0 6.492 3.246 3.246 0 0 0 0-6.492M5.754 8a2.246 2.246 0 1 1 4.492 0 2.246 2.246 0 0 1-4.492 0"/>
+  <path d="M9.796 1.343c-.527-1.79-3.065-1.79-3.592 0l-.094.319a.873.873 0 0 1-1.255.52l-.292-.16c-1.64-.892-3.433.902-2.54 2.541l.159.292a.873.873 0 0 1-.52 1.255l-.319.094c-1.79.527-1.79 3.065 0 3.592l.319.094a.873.873 0 0 1 .52 1.255l-.16.292c-.892 1.64.901 3.434 2.541 2.54l.292-.159a.873.873 0 0 1 1.255.52l.094.319c.527 1.79 3.065 1.79 3.592 0l.094-.319a.873.873 0 0 1 1.255-.52l.292.16c1.64.893 3.434-.902 2.54-2.541l-.159-.292a.873.873 0 0 1 .52-1.255l.319-.094c1.79-.527 1.79-3.065 0-3.592l-.319-.094a.873.873 0 0 1-.52-1.255l.16-.292c.893-1.64-.902-3.433-2.541-2.54l-.292.159a.873.873 0 0 1-1.255-.52zm-2.633.283c.246-.835 1.428-.835 1.674 0l.094.319a1.873 1.873 0 0 0 2.693 1.115l.291-.16c.764-.415 1.6.42 1.184 1.185l-.159.292a1.873 1.873 0 0 0 1.116 2.692l.318.094c.835.246.835 1.428 0 1.674l-.319.094a1.873 1.873 0 0 0-1.115 2.693l.16.291c.415.764-.42 1.6-1.185 1.184l-.291-.159a1.873 1.873 0 0 0-2.693 1.116l-.094.318c-.246.835-1.428.835-1.674 0l-.094-.319a1.873 1.873 0 0 0-2.692-1.115l-.292.16c-.764.415-1.6-.42-1.184-1.185l.159-.291A1.873 1.873 0 0 0 1.945 8.93l-.319-.094c-.835-.246-.835-1.428 0-1.674l.319-.094A1.873 1.873 0 0 0 3.06 4.377l-.16-.292c-.415-.764.42-1.6 1.185-1.184l.292.159a1.873 1.873 0 0 0 2.692-1.115z"/>
+</svg>, 
+que es el `Settings`, en la parte superior derecha:
+  
+![goat-notes -> Settings](images/2025-04-04_141346.png "goat-notes -> Settings")
+
+
