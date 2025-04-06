@@ -4,6 +4,7 @@ import { useSearchParams } from "next/navigation";
 import { Textarea } from "./ui/textarea";
 import { ChangeEvent, useEffect } from "react";
 import { debounceTimeout } from "@/lib/constants";
+import useNote from "@/hooks/useNote";
 
 type Props = {
   noteId: string;
@@ -12,12 +13,6 @@ type Props = {
 
 //Temporal, para subir al repositorio sin errores
 /*🗑️  ->🗑️<-  ->🗑️<-  ->🗑️<-  ->🗑️<- ->🗑️<-  ->🗑️<-  ->🗑️<-  ->🗑️*/
-/*🗑️*/function useNote() {
-/*🗑️*/  return {
-/*🗑️*/    noteText: "",
-/*🗑️*/    setNoteText: (text: string) => {},
-/*🗑️*/  };
-/*🗑️*/}
 /*🗑️*/function updateNoteAction(noteId: string, noteText: string) {
 /*🗑️*/  console.log("Updating note ", noteId, noteText);
 /*🗑️*/}
