@@ -2209,3 +2209,82 @@ export const debounceTimeout = 1500;
 >[!TIP]  
 >### Abrir el archivo **`package.json`** y borra todos los _carets_ (`^`).
 
+
+## 15. Create Context and Custom Hook (1:18:18)
+
+1. En la carpeta **"src/providers"**, creamos el archivo de nombre
+**`NoteProvider.tsx`**, con esto:
+```js
+"use client";
+
+import { createContext, useState } from "react";
+
+type NoteProviderContextType = {
+  noteText: string;
+  setNoteText: (noteText: string) => void;
+};
+
+export const NoteProviderContext = createContext<NoteProviderContextType>({
+  noteText: "",
+  setNoteText: () => {},
+});
+
+function NoteProvider({ children }: { children: React.ReactNode }) {
+  const [noteText, setNoteText] = useState("");
+
+  return (
+    <NoteProviderContext.Provider value={{ noteText, setNoteText }}>
+      {children}
+    </NoteProviderContext.Provider>
+  );
+}useNotes.tsx
+
+export default NoteProvider;
+```
+2. Creamos un _Custom Hook_ en la carpeta **"src/hooks"** de nombre
+**`useNote.tsx`**, con este código:
+```js
+"use client";
+
+import { NoteProviderContext } from "@/providers/NoteProvider";
+import { useContext } from "react";
+
+function useNote() {
+  const context = useContext(NoteProviderContext);
+
+  if (!context) throw new Error("useNote must be used within a NoteProvider");
+
+  return context;
+}
+
+export default useNote;
+```
+3. Volvemos al componente **`NoteTextInput.tsx`**, borramos
+del texto temporal la función `useNote()` 
+e importamos lo que recién se implementó:
+```js
+import useNote from "@/hooks/useNote";
+```
+* Así luce hasta el momento en pantalla:  
+![NoteTextInput.tsx casi listo](images/2025-04-06_170212.png "NoteTextInput.tsx casi listo")
+
+
+4. Regresamos al archivo **`app/layout.tsx`** y encerramos desde
+`<SidebarProvider>` hasta `<Toaster />`, dentro del nuevo 
+_provider_ de nombre `NoteProvider`:
+```js
+          <NoteProvider>
+            <SidebarProvider>
+              <AppSidebar />
+              <div className="flex min-h-screen w-full flex-col">
+                <Header />
+                <main className="flex flex-1 flex-col px-4 pt-10 xl:px-8">
+                  {children}
+                </main>
+              </div>
+            </SidebarProvider>
+            <Toaster />
+          </NoteProvider>
+```
+* Recordar la respectiva importación:  
+`import NoteProvider from "@/providers/NoteProvider"`
