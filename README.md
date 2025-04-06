@@ -2107,3 +2107,105 @@ que es el `Settings`, en la parte superior derecha:
 ![goat-notes -> Settings](images/2025-04-04_141346.png "goat-notes -> Settings")
 
 
+11. La API Key del paso 8 de , la copiamos en el archivo **`.env.local`**
+con el nombre de `OPEN_API_KEY`.
+12. Regresamos al componente **`app/page.tsx`**, dentro de la función
+`HomePage()` y damos `[Ctrl]` + click en el renderizado de 
+`<AskAIButton`.
+
+
+## 14. Build NoteTextInput (1:11:22) 
+
+>[!NOTE]  
+>Acá apenas el instructor está completando y creando los tres 
+>componentes del paso anterior [Build Home Page](#12-build-home-page-10425):
+>* **`AskAIButton.tsx`**
+>* **`NewNoteButton.tsx`**
+>* **`NoteTextInput.tsx`**
+>
+>Ya veremos que nos quedó faltando en cada componente.  
+>Y veo que se atinamos a todo lo mínimo para que el aplicativo
+>funcione sin errores, y esta es la pantalla hasta ahora:  
+>![app/page.tsx y los tres componentes](images/2025-04-05_183901.png "app/page.tsx y los tres componentes")
+
+
+1. Vamos a completar el componente **`NoteTextInput.tsx`**, con
+lo siquiente, antes del `return`:
+```js
+  const noteIdParam = useSearchParams().get("noteIp") || "";
+  const { noteText, setNoteText } = useNote();
+```
+>[!WARNING]  
+>Obtenemos estos errores:
+>* Duplicate identifier 'noteId'.
+>* Cannot find name 'useNote'.
+>
+>Pero seguimos:
+2. Creo una función de nombre `handleUpdateNote()`, por ahora vacía:
+3. En una `TERMINAL` ejecutamos el comando de este sitio  
+[Texarea](https://ui.shadcn.com/docs/components/textarea):
+```bash
+pnpm dlx shadcn@latest add textarea
+```
+4. Cambiamos los elementos `<div` por `<Textarea`, con la respectiva
+impotación de `import { Textarea } from "./ui/textarea";`.
+5. Cambiamoe el `Textarea`, por un auto cerrable y otros cambios:
+```js
+  return <Textarea
+    value={noteText}
+    onChange={handleUpdateNote}
+    placeholder="Write your note here..."
+    className="custom-scrollbar mb-4 h-full max-w-4xl resize-none border p-4 placeholder:text-muted-foreground focus-visible:ring-0 focus-visible:ring-offset-0"
+  />;
+```
+6. Complementamos la función `handleUpdateNote()`:
+```js
+  function handleUpdateNote(e: ChangeEvent<HTMLTextAreaElement>) {
+    const updatedNoteText = e.target.value;
+    setNoteText(updatedNoteText);
+  }
+```
+7. Creamos una variable por fuera de la función de nombre 
+`updateTimeout` y de tipo `NodeJS.Timeout`.
+>[!NOTE]  
+>La razón de utilizar esto es, cuando estás digitando no debe 
+>guardarse en cada vez que se teclea, y será guardado cuando 
+>haya pasado uno o dos segundos, se llama _atiborrar_.
+8. Hacemos uso de este `Timeout`, en la función ``:
+```js
+    clearTimeout(updateTimeout);
+    updateTimeout = setTimeout(() => {
+      updateNoteAction(noteId, updatedNoteText);
+    }, debounceTimeout);
+```
+9. En la carpeta **"src/lib"** creamos el archivo **`constants.ts`**:
+```js
+export const debounceTimeout = 1500;
+```
+10. Lo importamos en el componente **`NoteTextInput.tsx`**.
+11. Creamos un _hook_ de tipo `useEffect`:
+```js
+  useEffect(() => {
+    if (noteIdParam === noteId) {
+      setNoteText(startingNoteText);
+    }
+  }, [startingNoteText, noteIdParam, noteId, setNoteText]);
+```
+12. Temporal, para subir al repositorio sin errores
+```js
+/*🗑️  ->🗑️<-  ->🗑️<-  ->🗑️<-  ->🗑️<- ->🗑️<-  ->🗑️<-  ->🗑️<-  ->🗑️*/
+/*🗑️*/function useNote() {
+/*🗑️*/  return {
+/*🗑️*/    noteText: "",
+/*🗑️*/    setNoteText: (text: string) => {},
+/*🗑️*/  };
+/*🗑️*/}
+/*🗑️*/function updateNoteAction(noteId: string, noteText: string) {
+/*🗑️*/  console.log("Updating note ", noteId, noteText);
+/*🗑️*/}
+/*🗑️  ->🗑️<-  ->🗑️<-  ->🗑️<-  ->🗑️<- ->🗑️<-  ->🗑️<-  ->🗑️<-  ->🗑️*/
+```
+
+>[!TIP]  
+>### Abrir el archivo **`package.json`** y borra todos los _carets_ (`^`).
+
