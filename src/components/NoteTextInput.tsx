@@ -5,24 +5,18 @@ import { Textarea } from "./ui/textarea";
 import { ChangeEvent, useEffect } from "react";
 import { debounceTimeout } from "@/lib/constants";
 import useNote from "@/hooks/useNote";
+import { updateNoteAction } from "@/actions/notes";
 
 type Props = {
   noteId: string;
   startingNoteText: string;
 };
 
-//Temporal, para subir al repositorio sin errores
-/*🗑️  ->🗑️<-  ->🗑️<-  ->🗑️<-  ->🗑️<- ->🗑️<-  ->🗑️<-  ->🗑️<-  ->🗑️*/
-/*🗑️*/function updateNoteAction(noteId: string, noteText: string) {
-/*🗑️*/  console.log("Updating note ", noteId, noteText);
-/*🗑️*/}
-/*🗑️  ->🗑️<-  ->🗑️<-  ->🗑️<-  ->🗑️<- ->🗑️<-  ->🗑️<-  ->🗑️<-  ->🗑️*/ 
-
 let updateTimeout: NodeJS.Timeout;
 
 function NoteTextInput({ noteId, startingNoteText }: Props) {
   const noteIdParam = useSearchParams().get("noteIp") || "";
-  const { noteText, setNoteText } = useNote();
+  const { noteText, setNoteText } = useNote(); //"@/hooks/useNote"
 
   useEffect(() => {
     if (noteIdParam === noteId) {
@@ -36,8 +30,8 @@ function NoteTextInput({ noteId, startingNoteText }: Props) {
 
     clearTimeout(updateTimeout);
     updateTimeout = setTimeout(() => {
-      updateNoteAction(noteId, updatedNoteText);
-    }, debounceTimeout);
+      updateNoteAction(noteId, updatedNoteText); // "@/actions/notes"
+    }, debounceTimeout); // "@/lib/constants"
   }
 
   return <Textarea
