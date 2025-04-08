@@ -2288,3 +2288,57 @@ _provider_ de nombre `NoteProvider`:
 ```
 * Recordar la respectiva importación:  
 `import NoteProvider from "@/providers/NoteProvider"`
+
+
+## 16. Write Update Note Server Action (1:22:06)
+
+1. Creamos en la carpeta **"src/actions"** un archivo de nombre
+**`notes.ts`**, con este código:
+```js
+"use server";
+```
+2. Del archivo **`actions/users.ts`**, copiamos la primera función
+de nombre `loginAction()`, en el archivo **`actions/notes.ts`**, le hacemos unos cambios e importamos lo necesario:
+```js
+import { handleError } from "@/lib/utils";
+
+export async function updateNoteAction(noteId: string, text: string) {
+  try {
+
+    return { errorMessage: null };
+  } catch (error) {
+    return handleError(error);
+  }
+}
+```
+3. En el `try`, antes del `return`, empezamos a poner código, y a
+completar las importaciones necesarias:
+```js
+"use server";
+
+import { getUser } from "@/auth/server";
+import { prisma } from "@/db/prisma";
+import { handleError } from "@/lib/utils";
+
+export async function updateNoteAction(noteId: string, text: string) {
+  try {
+    const user = await getUser();
+    if (!user) throw new Error("You must be logged in to update a note");
+
+    await prisma.note.update({
+      where: { id: noteId },
+      data: { text },
+    });
+
+    return { errorMessage: null };
+  } catch (error) {
+    return handleError(error);
+  }
+}
+```
+4. Regresamos al componente **`NoteTextInput.tsx`**, borramos
+la función temporal de nombre `updateNoteAction` e importamos
+la nueva de `actions`: 
+```js
+import { updateNoteAction } from "@/actions/notes";
+```
