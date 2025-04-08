@@ -2342,3 +2342,176 @@ la nueva de `actions`:
 ```js
 import { updateNoteAction } from "@/actions/notes";
 ```
+
+## 17. Finish NewNoteButton (1:24:27)
+
+1. Vamos al componente **`NewNoteButton.tsx`**, empezamos cambiando
+el elemento `<div` , por un `<Button`, con la respectiva importación
+`import { Button } from "./ui/button";`.
+2. Borramos el `console.log`
+3. Coloquemos código dentro del renderizado del `<Button`:
+```js
+function NewNoteButton({ user }: Props) {
+  const loading = false; // Simulate loading state
+
+  return (
+    <Button>
+      {loading ? <Loader2 className="animate-spin" /> : "New Note"}
+    </Button>
+  );
+}
+```
+4. Al renderizado de `<Button` le añadimos una acciónde `onClick`:
+```js
+  return (
+    <Button
+      onClick={handleClickNewNoteButton}
+      variant="secondary"
+      className="w-24"
+      disabled={loading}
+    >
+      {loading ? <Loader2 className="animate-spin" /> : "New Note"}
+    </Button>
+  );
+```
+5. Pongamos a `loading` como un _hook_ de tipo `useState`:
+```js
+  const [loading, setLoading] = useState(false);
+```
+6. Creamos la función faltante `handleClickNewNoteButton()`:
+```js
+  async function handleClickNewNoteButton() {}
+```
+7. Creamos la constante `router` que es un _hook_ de tipo
+`useRouter`:
+```js
+  const router = useRouter(); // "next/navigation"
+```
+8. Seguimos con el código en la función `handleClickNewNoteButton()`:
+```js
+    if (!user) {
+      router.push("/login");
+    } else {
+      setLoading(true);
+    }    
+  }
+```
+9. Instalamos en una `TERMINAL` la librería `uuid`:
+```bash
+pnpm add uuid -E            
+```
+10. En el componente **`NewNoteButton.tsx`**, importamos el
+`v4` del `uuid` de la siguiente manera:
+```js
+import {v4 as uuidv4} from "uuid"; 
+```
+11. El `else` le añadimos mas código:
+```js
+      const uuid = uuidv4();
+      await createNoteAction(uuid);
+      router.push(`/?noteId=${uuid}`);
+```
+12. Como nos falta la función createNoteAction(), hacemos una temporal:
+```js
+  async function createNoteAction(uuid: string) {}
+```
+13. Creamos una constante `toast` como un _hook_ de tipo `useToast`,
+con la respectiva importación ``:
+```js
+  const {toast} = useToast(); // "@/hooks/useToast"
+```
+14. Ponemos un `toast`, antes de cerrar el `else`:
+```js
+      toast({
+        title: "New Note created",
+        description: "Your note has been created successfully.",
+        variant: "success",
+      });
+```
+15. Para hacer la prueba, hacemos el `Login` en una cuenta conocida,
+y damos clic en el botón `[New Note]` y abajo nos aparece el 
+_toast_:  
+![[New Note] simulada](images/2025-04-08_155344.png "[New Note] simulada")
+
+
+
+16. El instructor hizo unos cambios el componente 
+**`NewNoteButton.tsx`**, para simular el tiempo de espera cuando 
+se guarda la nueva `Note` :
+```js
+  async function handleClickNewNoteButton() {
+    if (!user) {
+      router.push("/login");
+    } else {
+      setLoading(true);
+      const savingTotast = toast({
+        title: "Saving Current Note",
+        description: "Saving your current note before creating a new one.",
+        variant: "default",
+      });
+
+      await new Promise((resolve) =>
+        setTimeout(resolve, debounceTimeout + 2000),
+      ); // Simulate saving time
+
+      const uuid = uuidv4();
+      await createNoteAction(uuid);
+      router.push(`/?noteId=${uuid}`);
+
+      savingTotast.dismiss();
+      toast({
+        title: "New Note created",
+        description: "Your note has been created successfully.",
+        variant: "success",
+      });
+
+      setLoading(false);
+    }
+  }
+```
+17. Vamos al archivo **`actions/notes.ts`** a crear la función
+`createNoteAction()`, duplicando la función `updateNoteAction()`:
+```js
+export async function createNoteAction(noteId: string) {
+  try {
+    const user = await getUser(); // "@/auth/server"
+    if (!user) throw new Error("You must be logged in to update a note");
+
+    await prisma.note.create({ // "@/db/prisma"
+      data: { 
+        id: noteId, 
+        authorId: user.id, 
+        text: "", // Assuming text is an empty string initially
+      }, 
+    });
+
+    return { errorMessage: null };
+  } catch (error) {
+    return handleError(error); // "@/lib/utils"
+  }
+}
+```
+18. Ahora en el componente **`NewNoteButton.tsx`**, borramos la
+función temporal de nombre `createNoteAction`, e importamos la
+acción correcta cuando llamamos la función faltante.
+
+>[!CAUTION]  
+>Hallo un error en el componente **`NoteTextInput.tsx`**, cambiando
+>esta línea:  
+>`  const noteIdParam = useSearchParams().get("noteIp") || "";`  
+>por esta:  
+>`  const noteIdParam = useSearchParams().get("noteId") || "";`  
+>El valor correcto del parámetro termina en `Id`.
+
+>[!TIP]  
+>Verifico con estos pasos:
+>1. Hago un `[Login]` con una cuenta conocida.
+>2. Presiono el botón de `[New Note]`.
+>3. Reviso en `Supabase` en la tabla `notes` y veo un registro nuevo.
+>4. Digito cualquier texto y reviso de nuevo en `Supabase`.
+>5. Presiono de nuevo el botón de `[New Note]`.
+>6. Reviso en `Supabase` otro registro nuevo en `notes`.
+>7. Mas texto y se autoguarda, reviso en `Supabase`.
+>
+>![NewNoteButton Test](images/2025-04-08_165732.gif "NewNoteButton Test")
+>
