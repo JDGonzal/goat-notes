@@ -2515,3 +2515,304 @@ acción correcta cuando llamamos la función faltante.
 >
 >![NewNoteButton Test](images/2025-04-08_165732.gif "NewNoteButton Test")
 >
+
+
+
+## 18. Finish Sidebar (1:29:23)
+
+1. Empezamos con el componente **`SidebarGroupContent.tsx`**,
+empezamos cambiando el elemento `<div` por el renderizado de
+`<SidebarGroupContentShadCN`, con una importación muy especial:  
+```js
+...
+import { SidebarGroupContent as SidebarGroupContentShadCN } from "@/components/ui/sidebar";
+...
+function SidebarGroupContent(notes: Props) {
+  console.log(notes);
+  return <SidebarGroupContentShadCN>Your notes here</SidebarGroupContentShadCN>;
+}
+```
+2. El texto de `Your notes`, lo cambiamos por varios elementos:
+```js
+import { SearchIcon } from "lucide-react";
+...
+function SidebarGroupContent(notes: Props) {
+  console.log(notes);
+  return (
+    <SidebarGroupContentShadCN>
+      <div className="relative flex items-center">
+        <SearchIcon className="absolute left-2 size-4" />
+      </div>
+      here
+    </SidebarGroupContentShadCN>
+  );
+}
+```
+3. Debajo del `<SearchIcon`, ponemos in `<Input`:
+```js
+import { Input } from "./ui/input";
+...
+function SidebarGroupContent(notes: Props) {
+  console.log(notes);
+  return (
+    <SidebarGroupContentShadCN>
+      <div className="relative flex items-center">
+        <SearchIcon className="absolute left-2 size-4" />
+        <Input
+          className="bg-muted pl-8"
+          placeholder="Search your notes..."
+          value={searchText}
+          onChange={(e) => setSearchText(e.target.value)}
+        />
+      </div>
+    </SidebarGroupContentShadCN>
+  );
+}
+```
+
+>[!WARNING]  
+>Tenemos algunos errores que mas adelante vamos a corregir:
+>* Cannot find name 'searchText'.
+>* Cannot find name 'setSearchText'.
+
+4. El `searchText` es un _hook_ te tipo `useState`:
+```js
+  const [searchText, setSearchText] = useState("");
+```
+5. Para probarlo debo hacer `[Login]` en una cuenta existente,
+y así se ve el cuadro de búsquedas:  
+![Search your notes..](images/2025-04-09_184345.png "Search your notes...").
+
+
+6. Agrebamos por fuera del `<div` un `SidebarMenu`, con la 
+respectiva importación:
+```js
+      <SidebarMenu className="mt-4">
+        
+      </SidebarMenu>
+```
+7. Creamos un _hook_ de tipo `useState` de nombre `localNotes`:
+```js
+  const [localNotes, setLocalNotes] = useState(notes);
+```
+8. Ponemos un _hook_ de tipo `useEffect`, con la respectiva
+importación:
+```js
+  useEffect(() => {
+    setLocalNotes(notes);
+  }, [notes]);
+```
+
+9. En una `TERMINAL` instalamos la librería `fuse.js`:
+```bash
+pnpm add fuse.js -E
+```
+10. Creamos un _hook_ de tipo `useMemo`y utilizamos la nueva librería de `fuse`, con una importación en mayúsculas:
+```js
+  const fuse = useMemo(() => {
+    return new Fuse(localNotes, {
+      keys: ["text"],
+      threshold: 0.4, // 1 es _match_ exacto, otros valores son aproximaciones
+    });
+  }, [localNotes]);
+```
+
+>[!WARNING]  
+>Tengo un error en este `useMemo`, relacionado con `localNotes`,
+> la solución es encerrar entre llaves `{}`, el valor cuando se 
+>recibe como parámetro en la función principal:
+>```js
+>function SidebarGroupContent({notes}: Props) {
+>```
+
+>[!NOTE]  
+>La razón de usar el `useMemo` es que se renderiza en el `useEffect`
+>pero no es necesario, si y solo si, si cambia el valor de 
+>`localNotes`.
+
+11. Creamos la constante `filteredNotes` y en un condicional 
+ternario, :
+```js
+  const filteredNotes = searchText
+    ? fuse.search(searchText).map((result) => result.item)
+    : localNotes;
+```
+
+12. Usamos este `filteredNotes`, como el valor a agregar cuando
+renderizamos el componente `<SidebarMenu`, con la importación del
+renderizado de `<SidebarMenuItem`:
+```js
+      <SidebarMenu className="mt-4">
+        {filteredNotes.map((note) => (
+          <SidebarMenuItem
+            key={note.id}
+            className="group/item"
+          ></SidebarMenuItem>
+        ))}
+      </SidebarMenu>
+```
+13. Agregamos el renderizado de dos componente, dentro del 
+`<SidebarMenuItem`:
+    * `<SelectNoteButton`
+    * `<DeleteNoteButton`
+```js
+          <SidebarMenuItem
+            key={note.id}
+            className="group/item"
+          >
+            <SelectNoteButton note={note} />
+            <DeleteNoteButton noteId={note.id} />
+          </SidebarMenuItem>
+```
+>[!WARNING]  
+>Aparece dos errores, puesto que los componentes no existen aun.
+
+14. En el renderizado del componente `<DeleteNoteButton` agregamos
+otro elemento que es el llamado a una función:
+```js
+          <SidebarMenuItem key={note.id} className="group/item">
+            <SelectNoteButton note={note} />
+            <DeleteNoteButton
+              noteId={note.id}
+              deleteNoteLocally={deleteNoteLocally}
+            />
+          </SidebarMenuItem>
+```
+15. Creamos la función `deleteNoteLocally()`:
+```js
+  function deleteNoteLocally(noteId: string) {
+    setLocalNotes((prevNotes) =>
+      prevNotes.filter((note) => note.id !== noteId),
+    );
+  }
+```
+16. Creamos los dos componentes faltantes:
+    * **`SelectNoteButton.tsx`**
+    * **`DeleteNoteButton.tsx`**
+
+17. A ambos les aplicamos el _snipet_ `rfce` y cambiamos el
+`import React from "react";` por `"use client";`.
+18. En el componente **`SelectNoteButton.tsx`**, definimos un 
+tipo `Props`:
+```js
+"use client";
+
+import { Note } from "@prisma/client";
+
+type Props = {
+  note: Note; // "@prisma/client"
+};
+
+function SelectNoteButton({ note}: Props) {
+  return <div>SelectNoteButton</div>;
+}
+
+export default SelectNoteButton;
+```
+19. En el componente **`DeleteNoteButton.tsx`**, definimos un
+tipo `Props`:
+```js
+"use client";
+
+type Props ={
+  noteId: string;
+  deleteNoteLocally: (noteId: string) => void;
+}
+
+function DeleteNoteButton({noteId, deleteNoteLocally}:Props) {
+  return <div>DeleteNoteButton</div>;
+}
+
+export default DeleteNoteButton;
+```
+20. Ahora si Importamos los dos componentes en 
+**`SidebarGroupContent.tsx`**.
+* Así se ve hasta el momento en el browser:  
+![Componente SidebarGroupContent](images/2025-04-10_155326.png "Componente SidebarGroupContent")  
+* Se ven dos(2) `SelectNoteButton` y dos (2) `DeleteNoteButton`,
+porque hay dos registros en la base de datos en la tabla `notes`.
+*. El filtro tambien funciona.
+
+
+
+21. Vamos al componente **`Header.tsx`** y renderizamos un componente
+de nombre `<SidebarTrigger`, justo arriba del `<Link` con la
+imagen del **`goatius.png`**, y la respectiva importación:
+```js
+      <SidebarTrigger />
+```
+22. Agregamos un `className` a este nuevo renderizado:
+```js
+      <SidebarTrigger className="absolute left-1 top-1" />
+```
+* El botón aparece arriba-izquierda de la imagen **`goatius.png`** 
+y sirve para ocultar o mostrar la barra izquierda.
+
+23. Regresamos al componente **`SelectNoteButton.tsx`** y definimos 
+una constante en la función principal, con la respectiva importación:
+```js
+  const noteId = useSearchParams().get("noteId") || ""; // "next/navigation"
+```
+24. Definimos un objeto de con valor de ``, y de tipo 
+_hook_ `useNote`:
+```js
+  const { noteText: selectedNoteText } = useNote(); // "@/hooks/useNote"
+```
+25. Defino una constante para las notas vacías:
+```js
+const blankNoteText = "EMPTY NOTE";
+```
+26. Defino una variable `noteText`:
+```js
+let noteText = localNoteText || blankNoteText;
+```
+>[!WARNING]  
+>Por ahora tengo el error: 
+>* Cannot find name 'localNoteText'.
+
+27. Defino un _hook_ de tipo `useState`, para el valor de
+`localNoteText`:
+```js
+const [localNoteText, setLocalNoteText] = useState(note.text);
+```
+* Recuerde la respectiva importaciónde `useState`.
+28. Debajo de la variable `NoteText`, ponemos un condicional:
+```js
+  if (shouldUseGlobalNoteText) {
+    noteText = selectedNoteText || blankNoteText;
+  }
+```
+>[!WARNING]  
+>Obtenemos el error:
+>* Cannot find name 'shouldUseGlobalNoteText'.
+
+29. Creamos un _hook_ de tipo `useState` para el valor faltante
+de `houldUseGlobalNoteText`:
+```js
+  const [shouldUseGlobalNoteText, setShouldUseGlobalNoteText] = useState(false);
+```
+30. Creamos un _hook_ de tipo `useEffect`:
+```js
+  useEffect(() => {
+    if (noteId === note.id) {
+      setShouldUseGlobalNoteText(true);
+    } else {
+      setShouldUseGlobalNoteText(false);
+    }
+  }, [noteId, note.id]);
+```
+* Recuerden la importación de `useEffect`
+
+31. Creamos otro `useEffect`:
+```js
+  useEffect(() => {
+    if (shouldUseGlobalNoteText) {
+      setLocalNoteText(selectedNoteText);
+    }
+  }, [selectedNoteText, shouldUseGlobalNoteText]);
+```
+32. Cambiamos el elemento `<div` por renderizar el componente
+`<SidebarMenuButton` y la respectiva importación:
+```js
+  return <SidebarMenuButton>SelectNoteButton</SidebarMenuButton>
+```
