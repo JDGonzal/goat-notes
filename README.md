@@ -3063,5 +3063,273 @@ export async function deleteNoteAction(noteId: string) {
 
 
 * También verificar en BD y tan solo queda un registro:  
-![](images/2025-04-12_193022.png "")
+![Verificación en Base de Datos](images/2025-04-12_193022.png "Verificación en Base de Datos")
+
+
+
+## 19. Add Middleware (1:51:31)
+
+1. Abrimos el archivo **`middleware.ts`** y empezamos a ajustar los
+comentarios que dejamos en el paso 
+[8. Add Supabase Code](#8-add-supabase-code-03548), quitanto el
+comentario que empieza en `const supabase = createServerClient(`
+hasta el cierre de la creación del sernvidor, y quito el comentario 
+de `!Comentado para no crear aun el servidor de supabase`:
+```js
+  const supabase = createServerClient(
+    process.env.SUPABASE_URL!,
+    process.env.SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll();
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value /*, options*/ }) =>
+            request.cookies.set(name, value),
+          );
+          supabaseResponse = NextResponse.next({
+            request,
+          });
+          cookiesToSet.forEach(({ name, value, options }) =>
+            supabaseResponse.cookies.set(name, value, options),
+          );
+        },
+      },
+    },
+  );
+```
+2. Agregamos la constante `isAuthRoute`, en debajo del que 
+se le quitó el comentario:
+```js
+  const isAuthRoute =
+    request.nextUrl.pathname === "/login" ||
+    request.nextUrl.pathname === "/sign-up";
+```
+3. Se agrega una condición basada en `isAuthRoute`:
+```js
+  // Dependiendo de la ruta, redirigimos al usuario a la página de inicio o a la página de inicio de sesión
+  if (isAuthRoute) {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (user) {
+      return NextResponse.redirect(
+        new URL("/", process.env.NEXT_PUBLIC_BASE_URL),
+      );
+    }
+  }
+```
+4. Cargamos en un objeto los datos provenientes de 
+`new URL(request.url);`:
+```js
+  // Cargamos el token de acceso y lo guardamos en la cookie
+  const { searchParams, pathname } = new URL(request.url);
+```
+5. Encerramos en un condicional lo comentado debajo del texto
+`!Comentado para evitar redirecionamento para login`, quitando
+ese texto y descomentando el código que sigue:
+```js
+  if (!searchParams.get("noteId") && pathname === "/") {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+  }
+```
+6. Dentro de este nuevo condicional preguntamos por el `user`:
+```js
+    if (user) {
+      const { newestNoteId } = await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/fetch-newest-note?userId=${user.id}`,
+      ).then((res) => res.json());
+    }
+```
+7. Dentro de la misma condicional del `user`, poreguntamos por
+el valor obtenido de `newestNoteId`, así va este gran número de 
+condicionales anidados:
+```js
+  if (!searchParams.get("noteId") && pathname === "/") {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (user) {
+      const { newestNoteId } = await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/fetch-newest-note?userId=${user.id}`,
+      ).then((res) => res.json());
+
+      if (newestNoteId) {
+        const url = request.nextUrl.clone();
+        url.searchParams.set("noteId", newestNoteId);
+        return NextResponse.redirect(url);
+      }
+    }
+  }
+```
+8. Hacemos el `else`, del condicional del valor `newestNoteId`:
+```js
+      if (newestNoteId) {
+        const url = request.nextUrl.clone();
+        url.searchParams.set("noteId", newestNoteId);
+        return NextResponse.redirect(url);
+      } else {
+        const { noteId } = await fetch(
+          `${process.env.NEXT_PUBLIC_BASE_URL}/api/create-new-note?userId=${user.id}`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          },
+        ).then((res) => res.json());
+        const url = request.nextUrl.clone();
+        url.searchParams.set("noteId", noteId);
+        return NextResponse.redirect(url);
+      }
+```
+>[!WARNING]  
+>Sale un error relacionado con la no existencia de los api
+> que se tratan de acceder en el **`middleware.ts`**:
+>```diff
+>-GET /api/fetch-newest-note?userId=e343b7b7-6c5d-48ea-b2b4-b9eecfa824f3 404 in 14787ms
+>``` 
+9. Creamos en la carpeta **"src/app"**, el siguiente archivo:
+**`api/create-new-note/route.ts`**, y le ponemos este código:
+```js
+import { prisma } from "@/db/prisma";
+import { NextRequest, NextResponse } from "next/server";
+
+export async function POST(request: NextRequest) {
+  const { searchParams } = new URL(request.url);
+  const userId = searchParams.get("userId") || "";
+
+  const { id } = await prisma.note.create({
+    data: {
+      authorId: userId,
+      text: "",
+    },
+  });
+
+  return NextResponse.json({
+    noteId: id,
+  });
+}
+```
+10. Creamos otro arhivo en la carpeta **"src/app"**, con el nombre
+**`api/fetch-newest-note/route.ts`** y este código:
+```js
+import { prisma } from "@/db/prisma";
+import { NextRequest, NextResponse } from "next/server";
+
+export async function GET(request: NextRequest) {
+  const { searchParams } = new URL(request.url);
+  const userId = searchParams.get("userId") || "";
+
+  const newestNoteId = await prisma.note.findFirst({
+    where: {
+      authorId: userId,
+    },
+    orderBy: {
+      createdAt: "desc",
+    },
+    select: {
+      id: true,
+    },
+  });
+
+  return NextResponse.json({
+    newestNoteId: newestNoteId?.id,
+  });
+}
+```
+
+>[IMPORTANT]  
+>### Cambiamos el **`db/schema.prisma`**.
+>1. Se detine la ejecución de la `TERMINAL` de `pnpm dev`.
+>2. Cambiamos el archivo **`db/schema.prisma`**, con los nombres
+>para las fechas.  
+>Cambiamos `creationAt` por `createdAt` y
+>la de `updateAt` por `updatedAt`:
+>```ini
+>datasource db {
+>  provider = "postgresql"
+>  url      = env("DATABASE_URL")
+>}
+>
+>generator client {
+>  provider = "prisma-client-js"
+>}
+>
+>model Note {
+>  id        String    @id @default(uuid())
+>  text      String
+>  author    User?     @relation(fields: [authorId], references: [id])
+>  authorId  String?
+>  createdAt DateTime @default(now())
+>  updatedAt DateTime  @updatedAt   @default(now())
+>}
+>
+>model User {
+>  id        String    @id @default(uuid())
+>  email     String    @unique
+>  posts     Note[]
+>  createdAt DateTime @default(now())
+>  updatedAt DateTime  @updatedAt   @default(now())
+>}
+>```
+>3. Borramos la carpeta **"src/db/migrations"**.
+>4. Borramos la carpeta **"node_modules/goat-notes"**.
+>5. Borramos la carpeta **"node_modules/@prisma/client"**.
+>6. Vamos a la página de `Supabase` y borramos las tablas en
+>`Database`:  
+>![Supabase/tables](images/2025-04-13_144311.png "Supabase/tables")
+>
+>
+>
+>7. Borramos de la página de `Supabase` los usuarios de 
+>`Authentication`:  
+>![](images/2025-04-13_181252.png "")
+>
+>
+>
+>8. Ejecutamos estos comandos en la `TERMINAL`:
+>```bash
+>pnpm prisma:generate
+>pnpm prisma:migrate
+>```
+>* Completamos el texto requerido con la palabra `init`.
+>9. Revisamos que aparezca la carpeta **"src/db/migrations"**.
+>10. Revisamos en `Supabase`, que existan de nuevo las tres tablas:  
+>![Supabase/tables(new)](images/2025-04-13_164256.png "Supabase/tables(new)").
+>
+>
+>
+>11. Corregimos estos dos archivos con los nombres de los campos
+>que recién cambiamos:
+>     * **`AppSidebar.tsx`**
+>     * **`SelectNoteButton.tsx`**
+>12. Volvemos a ejecutar en la `TERMINAL`:
+>```bash
+>pnpm dev
+>```
+
+>[!WARNING]  
+>* Si sale un error cuando se intenta levantar la página es probable
+>que se requiera borrar las `cookies`, dando clic derecho y luego
+>`clear`:  
+>![](images/2025-04-13_170035.png "")
+>
+>
+>* Hagamos de nuevo `[Sign Up]` y `[Login]`.
+>* Revise que si le llegue el correo para validar el usuario.
+
+>[!CAUTION]  
+>Veo que hizo cambios en:
+> * **`package.json`**
+> * **`pnpm-lock.yaml`**
+>
+>En el `git` o el `Sourcetree` restauro sin cambios y borro
+>en **"node_modules"**, la carpeta **"prisma"**.
+>
+>¡Ojo!, no se borra al final la **"@prisma"**.
 

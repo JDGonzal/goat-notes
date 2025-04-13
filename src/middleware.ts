@@ -25,40 +25,84 @@ export async function updateSession(request: NextRequest) {
   });
 
   console.log("middleware ran");
-  // !Comentado para no crear aun el servidor de supabase
-  // const supabase = createServerClient(
-  //   process.env.SUPABASE_URL!,
-  //   process.env.SUPABASE_ANON_KEY!,
-  //   {
-  //     cookies: {
-  //       getAll() {
-  //         return request.cookies.getAll();
-  //       },
-  //       setAll(cookiesToSet) {
-  //         cookiesToSet.forEach(({ name, value /*, options*/ }) =>
-  //           request.cookies.set(name, value),
-  //         );
-  //         supabaseResponse = NextResponse.next({
-  //           request,
-  //         });
-  //         cookiesToSet.forEach(({ name, value, options }) =>
-  //           supabaseResponse.cookies.set(name, value, options),
-  //         );
-  //       },
-  //     },
-  //   },
-  // );
 
-  // Do not run code between createServerClient and
-  // supabase.auth.getUser(). A simple mistake could make it very hard to debug
-  // issues with users being randomly logged out.
+  const supabase = createServerClient(
+    process.env.SUPABASE_URL!,
+    process.env.SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        getAll() {
+          return request.cookies.getAll();
+        },
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value /*, options*/ }) =>
+            request.cookies.set(name, value),
+          );
+          supabaseResponse = NextResponse.next({
+            request,
+          });
+          cookiesToSet.forEach(({ name, value, options }) =>
+            supabaseResponse.cookies.set(name, value, options),
+          );
+        },
+      },
+    },
+  );
 
-  // IMPORTANT: DO NOT REMOVE auth.getUser()
+  // !IMPORTANT: DO NOT REMOVE auth.getUser()
+  // ?Do not run code between createServerClient and
+  // ?supabase.auth.getUser(). A simple mistake could make it very hard to debug
+  // ?issues with users being randomly logged out.
 
-  // !Comentado para evitar redirecionamento para login
-  // const {
-  //   data: { user },
-  // } = await supabase.auth.getUser();
+  const isAuthRoute =
+    request.nextUrl.pathname === "/login" ||
+    request.nextUrl.pathname === "/sign-up";
+
+  // Dependiendo de la ruta, redirigimos al usuario a la página de inicio o a la página de inicio de sesión
+  if (isAuthRoute) {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (user) {
+      return NextResponse.redirect(
+        new URL("/", process.env.NEXT_PUBLIC_BASE_URL),
+      );
+    }
+  }
+
+  // Cargamos el token de acceso y lo guardamos en la cookie
+  const { searchParams, pathname } = new URL(request.url);
+
+  if (!searchParams.get("noteId") && pathname === "/") {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (user) {
+      const { newestNoteId } = await fetch(
+        `${process.env.NEXT_PUBLIC_BASE_URL}/api/fetch-newest-note?userId=${user.id}`,
+      ).then((res) => res.json());
+
+      if (newestNoteId) {
+        const url = request.nextUrl.clone();
+        url.searchParams.set("noteId", newestNoteId);
+        return NextResponse.redirect(url);
+      } else {
+        const { noteId } = await fetch(
+          `${process.env.NEXT_PUBLIC_BASE_URL}/api/create-new-note?userId=${user.id}`,
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+          },
+        ).then((res) => res.json());
+        const url = request.nextUrl.clone();
+        url.searchParams.set("noteId", noteId);
+        return NextResponse.redirect(url);
+      }
+    }
+  }
 
   // if (
   //   !user &&
