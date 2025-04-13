@@ -17,8 +17,8 @@ type Props = {
 function AuthForm({ type }: Props) {
   const isLoginForm = type === "login";
 
-  const router = useRouter();
-  const { toast } = useToast();
+  const router = useRouter(); // "next/navigation"
+  const { toast } = useToast(); // "@/hooks/use-toast"
 
   const [isPending, startTransition] = useTransition();
 

@@ -3,6 +3,8 @@
 
 [![Build a Full Stack AI Note Taking App with Next.js and Supabase – Tutorial](images/2025-03-19_110657.png "Build a Full Stack AI Note Taking App with Next.js and Supabase – Tutorial")](https://www.youtube.com/watch?v=6ChzCaljcaI&t=164s)
 
+[![Youtube -> @coleblender](https://yt3.googleusercontent.com/h2IZn_sGBZzWmZyfUWMWdbZvBEeWgyEXUlCXrV2-02CZWsh3Ph2hPGqYZGJ5ViFwPudEbc8FEA=w1707-fcrop64=1,00005a57ffffa5a8-k-c0xffffffff-no-nd-rj "Youtube -> @coleblender")](https://www.youtube.com/@coleblender)
+
 ## 1. Intro (0:00:00)
 
 1. Instalar `NODEJS` y `npm` en su sistema, usando el `nvm`:
@@ -2816,3 +2818,250 @@ de `houldUseGlobalNoteText`:
 ```js
   return <SidebarMenuButton>SelectNoteButton</SidebarMenuButton>
 ```
+33. Completamos el renderizado de `<SidebarMenuButton`:
+```js
+    <SidebarMenuButton
+      asChild
+      className={`items-start gap-0 pr-12 ${note.id === noteId && "bg-sidebar-accent/50"}`}
+    >
+      SelectNoteButton
+    </SidebarMenuButton>
+```
+34. Cambiamos el texto `SelectNoteButton` por un `Link` y 
+hacemos la importación de `import Link from "next/link";`:
+```js
+      <Link href={`/?noteId=${note.id}`} className="flex h-fit flex-col"></Link>
+```
+35. En el `<Link` agregamos un elemento `<p`:
+```js
+    <SidebarMenuButton
+      asChild
+      className={`items-start gap-0 pr-12 ${note.id === noteId && "bg-sidebar-accent/50"}`}
+    >
+      <Link href={`/?noteId=${note.id}`} className="flex h-fit flex-col">
+        <p className="w-full truncate overflow-hidden text-ellipsis whitespace-nowrap">
+          {noteText}
+        </p>
+      </Link>
+    </SidebarMenuButton>
+```
+* Así se ven los textos en la barra izquierda:  
+![Textos para editar](images/2025-04-10_190122.png "Textos para editar")
+
+
+
+36. Agregamos otro _tag_ `<p`, con lo siguiente:
+```js
+        <p className="text-muted-foreground text-xs">
+          {note.updateAt.toLocaleDateString()}
+        </p>
+```
+* Así salen las fechas:  
+![Fechas de las notas](images/2025-04-10_190652.png "Fechas de las notas")
+
+
+
+37. En una `TERMINAL` ejecutamos este comando, del sitio
+[Alert Dialog](https://ui.shadcn.com/docs/components/alert-dialog)
+```bash
+pnpm dlx shadcn@latest add alert-dialog
+```
+38. Vamos al componente **`DeleteNoteButton.tsx`** y copiamos de este 
+sitio [Alert Dialog](https://ui.shadcn.com/docs/components/alert-dialog),
+para sustituir el contenido del `return`:
+```js
+function DeleteNoteButton({ noteId, deleteNoteLocally }: Props) {
+  return (
+    <AlertDialog>
+      <AlertDialogTrigger>Open</AlertDialogTrigger>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+          <AlertDialogDescription>
+            This action cannot be undone. This will permanently delete your
+            account and remove your data from our servers.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogAction>Continue</AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+  );
+}
+```
+
+39. Del mismo sitio copiamos las importaciones requeridas:
+```js
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
+```
+
+>[!CAUTION]  
+>Muevo el componente **`DeleteNoteButton.tsx`**, a la carpeta
+>**"src/components"**, corrijo estos archivos:
+>* **`SidebarGroupContext.tsx`**
+
+40. Hacemos unos cambios en el `return` del componente
+**`DeleteNoteButton.tsx`**:
+```js
+  return (
+    <AlertDialog>
+      <AlertDialogTrigger asChild>
+        <Button> <Trash2/></Button>
+      </AlertDialogTrigger>
+      ...
+    </AlertDialog>
+  );
+```
+* Y las respectivas importaciones:
+```js
+import { Button } from "./ui/button";
+import { Trash2 } from "lucide-react";
+```
+41. En el renderizado del componente `<Button`, le agregamos un
+`className`:
+```js
+      <AlertDialogTrigger asChild>
+        <Button
+          className="absolute top-1/2 right-2 size-7 -translate-y-1/2 p-0 opacity-0 group-hover/item:opacity-100 [&_svg]:size-3"
+          variant="ghost"
+        >
+          {" "}
+          <Trash2 />
+        </Button>
+      </AlertDialogTrigger>
+```
+* El comportamiento esperado es que cada vez que paso el mouse por 
+la barra izquierda aparece la imagen de la caneca-basura o _trash_
+<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-trash" viewBox="0 0 16 16">
+  <path d="M5.5 5.5A.5.5 0 0 1 6 6v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m2.5 0a.5.5 0 0 1 .5.5v6a.5.5 0 0 1-1 0V6a.5.5 0 0 1 .5-.5m3 .5a.5.5 0 0 0-1 0v6a.5.5 0 0 0 1 0z"/>
+  <path d="M14.5 3a1 1 0 0 1-1 1H13v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V4h-.5a1 1 0 0 1-1-1V2a1 1 0 0 1 1-1H6a1 1 0 0 1 1-1h2a1 1 0 0 1 1 1h3.5a1 1 0 0 1 1 1zM4.118 4 4 4.059V13a1 1 0 0 0 1 1h6a1 1 0 0 0 1-1V4.059L11.882 4zM2.5 3h11V2h-11z"/>
+</svg>.
+
+42. Cambiamos este texto de `Are you absolutely sure?` por  
+`Are you sure you want to delete this note?`.
+43. Cambiamos todo este texto de  
+`This action cannot be undone. This will permanently delete your`  
+`account and remove your data from our servers.`  
+por  
+`This action cannot be undone. This will permanently delete your note`  
+`from our servers.`.
+44. Cambiamos el texto de `Continue` dentro del renderizado de
+`<AlertDialogAction` por este código
+```js
+          <AlertDialogAction>
+          {isPending ? <Loader2 className="animate-spin" /> : "Delete"}
+          </AlertDialogAction>
+```
+* Recuerda la importación requerida `"lucide-react"` para `Loader2`.
+>[!WARNING]  
+>Falta definir el valor de `isPending`.
+45. Definimos `isPending` como un _hook_ de tipo `useTransaction`:
+```js
+  const [isPending, startTransition] = useTransition();
+```
+* Y la respectiva importación de `"react"`.
+46. En el renderizado de `<AlertDialogAction`, le definimos unas
+acciones y un `className`:
+```js
+          <AlertDialogAction
+            onClick={handleDeleteNote}
+            className="bg-destructive text-destructive-foreground hover:bg-destructive/90 w-24"
+          >
+            {isPending ? <Loader2 className="animate-spin" /> : "Delete"}
+          </AlertDialogAction>
+```
+46. Creamos la función `handleDeleteNote()`:
+```js
+  function handleDeleteNote() {}
+```
+47. Empezamos a llenar la nueva función `handleDeleteNote()`:
+```js
+  function handleDeleteNote() {
+    startTransition(async () => {
+      const { errorMessage } = await deleteNoteAction(noteId);
+    });
+  }
+```
+
+>[!TIP]  
+>Como `deleteNoteAction()`, nos marca error, vamos al archivo 
+>**`action/notes`** y creamos la función vacía faltante:
+>```js
+>export async function deleteNoteAction(noteId: string) {
+>  return { errorMessage: null }
+>}
+>```
+>Para ser importada en el componente **`DeleteNoteButton.tsx`**
+
+48. dentro de la función principal `DeleteNoteButton()`, 
+ponemos dos _hook_ de tipo `useRouter` y otro `useToast`:
+```js
+function DeleteNoteButton({ noteId, deleteNoteLocally }: Props) {
+  const router = useRouter(); // "next/navigation"
+  const { toast } = useToast(); // "@/hooks/use-toast"
+```
+49. También leemos del parámetro el `noteId`:
+```js
+  const noteIdParam = useSearchParams().get("noteId") || ""; // "next/navigation"
+```
+50. En la función `handleDeleteNote()`, ponemos un `toast`, si
+no hay `erroMessage`:
+```js
+      if (!errorMessage) {
+        toast({
+          title: "Note Deleted",
+          description: "You have successfully deleted the note",
+          variant: "success",
+        });
+      }
+```
+51. Se llama la función que vino en los parámetros de nombre
+`deleteNoteLocally()`, dentro de la condición `if (!errorMessage)`:
+```js
+        // Eliminar la nota localmente **`SidebarGroupContent.tsx`**
+        deleteNoteLocally(noteId);
+```
+52. Si `noteId` es igual a `noteIdParam`, regresamos a la `URL` raíz:
+```js
+        // Si la nota eliminada es la que está seleccionada, redirigir a la página principal
+        if (noteId === noteIdParam) router.replace("/");
+```
+53. Vamos a completar en el archivo **`actions/notes.ts`**, la
+función `deleteNoteAction()`:
+```js
+export async function deleteNoteAction(noteId: string) {
+  try {
+    const user = await getUser();
+    if (!user) throw new Error("You must be logged in to delete a note");
+
+    await prisma.note.delete({
+      where: { id: noteId, authorId: user.id },
+    });
+
+    return { errorMessage: null };
+  } catch (error) {
+    return handleError(error);
+  }
+}
+```
+
+* Verificamos el borrado y esto es lo que pasa:  
+![Borrado de cada `Note`](images/2025-04-12_191755.gif "Borrado de cada `Note`")  
+
+
+
+* También verificar en BD y tan solo queda un registro:  
+![](images/2025-04-12_193022.png "")
+

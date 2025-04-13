@@ -8,8 +8,8 @@ import { useRouter } from "next/navigation";
 import { logOutAction } from "@/actions/users";
 
 function LogOutButton() {
-  const { toast } = useToast();
-  const router = useRouter();
+  const { toast } = useToast(); // "@/hooks/use-toast"
+  const router = useRouter(); // "next/navigation"
 
   async function handleLogOut() {
     setloading(true);
