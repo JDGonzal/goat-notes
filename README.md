@@ -3071,9 +3071,9 @@ export async function deleteNoteAction(noteId: string) {
 
 1. Abrimos el archivo **`middleware.ts`** y empezamos a ajustar los
 comentarios que dejamos en el paso 
-[8. Add Supabase Code](#8-add-supabase-code-03548), quitanto el
+[8. Add Supabase Code](#8-add-supabase-code-03548), quitando el
 comentario que empieza en `const supabase = createServerClient(`
-hasta el cierre de la creación del sernvidor, y quito el comentario 
+hasta el cierre de la creación del servidor, y quito el comentario 
 de `!Comentado para no crear aun el servidor de supabase`:
 ```js
   const supabase = createServerClient(
@@ -3099,7 +3099,7 @@ de `!Comentado para no crear aun el servidor de supabase`:
     },
   );
 ```
-2. Agregamos la constante `isAuthRoute`, en debajo del que 
+2. Agregamos la constante `isAuthRoute`, debajo del que 
 se le quitó el comentario:
 ```js
   const isAuthRoute =
@@ -3144,7 +3144,7 @@ ese texto y descomentando el código que sigue:
       ).then((res) => res.json());
     }
 ```
-7. Dentro de la misma condicional del `user`, poreguntamos por
+7. Dentro de la misma condicional del `user`, preguntamos por
 el valor obtenido de `newestNoteId`, así va este gran número de 
 condicionales anidados:
 ```js
@@ -3243,7 +3243,7 @@ export async function GET(request: NextRequest) {
 }
 ```
 
->[IMPORTANT]  
+>[!IMPORTANT]  
 >### Cambiamos el **`db/schema.prisma`**.
 >1. Se detine la ejecución de la `TERMINAL` de `pnpm dev`.
 >2. Cambiamos el archivo **`db/schema.prisma`**, con los nombres
@@ -3333,3 +3333,182 @@ export async function GET(request: NextRequest) {
 >
 >¡Ojo!, no se borra al final la **"@prisma"**.
 
+
+## 20. Add AskAIButton (1:59:43)
+
+1. De este sitio 
+[Dialog](https://ui.shadcn.com/docs/components/dialog)
+en una `TERMINAL` ejecutamos este comando:
+```bash
+pnpm dlx shadcn@latest add dialog
+```
+2. Del sitio anterior copiamos el código del `return` en el
+componente **`AskAiButton`**, cambiamos todo el `return`, y 
+borramos el `console.log`:
+```js
+function AskAIButton({ user }: Props) {
+  return (
+    <Dialog>
+      <DialogTrigger asChild>
+        <Button variant="outline">Edit Profile</Button>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-[425px]">
+        <DialogHeader>
+          <DialogTitle>Edit profile</DialogTitle>
+          <DialogDescription>
+            Make changes to your profile here. Click save when you're done.
+          </DialogDescription>
+        </DialogHeader>
+        <div className="grid gap-4 py-4">
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="name" className="text-right">
+              Name
+            </Label>
+            <Input id="name" value="Pedro Duarte" className="col-span-3" />
+          </div>
+          <div className="grid grid-cols-4 items-center gap-4">
+            <Label htmlFor="username" className="text-right">
+              Username
+            </Label>
+            <Input id="username" value="@peduarte" className="col-span-3" />
+          </div>
+        </div>
+        <DialogFooter>
+          <Button type="submit">Save changes</Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
+  );
+}
+```
+3. Del mismo sitio pegamos las importaciones respectivas:
+```js
+import { Button } from "@/components/ui/button";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+```
+4. Damos clic en el nuevo botón de `[Edit Profile]` y obtenemos
+esto:  
+![Edit Profile](images/2025-04-14_142454.png "[Edit Profile]")
+
+
+
+5. Agregamos un _hook_ de tipo `useState` para el valor `open`:
+```js
+  const [open, setOpen] = useState(false);
+```
+* Importamos el valor requerido de `"react"`.
+
+6. En el renderizado de `<Dialog` ponemos esto:
+```js
+    <Dialog open={open} onOpenChange={handleOnOpenChange}>
+```
+7. Creamos la función faltante `handleOnOpenChange()`:
+```js
+  function handleOnOpenChange(isOpen: boolean) {
+    if (!user) {
+      router.push("/login");
+    }
+  }
+```
+8. Definimos a `router` con el _hook_ de `useRouter`:
+```js
+  const router = useRouter(); // "next/navigation"
+```
+9. Hacemos el `else` al condicional de la función 
+`handleOnOpenChange()`:
+```js
+  function handleOnOpenChange(isOpen: boolean) {
+    if (!user) {
+      router.push("/login");
+    } else {
+      if (isOpen) {
+        // TODO: Si esta abierto y con el usuario
+      }
+      setOpen(isOpen);
+    }
+  }
+```
+10. Creamos tres _hook_ de tipo `useState`:
+```js
+  const [questionText, setQuestionText] = useState("");
+  const [questions, setQuestions] = useState<string[]>([]);
+  const [responses, setResponses] = useState<string[]>([]);
+```
+11. Cambiamos el `// TODO: Si esta abierto y con el usuario`
+por la definición de valores para las tres nuevos _hook_:
+```js
+  function handleOnOpenChange(isOpen: boolean) {
+    if (!user) {
+      router.push("/login");
+    } else {
+      if (isOpen) {
+        setQuestionText("");
+        setQuestions([]);
+        setResponses([]);
+      }
+      setOpen(isOpen);
+    }
+  }
+```
+12. Definimo un _hook_ de tipo `useTransition`:
+```js
+  const [isPending, startTransition] = useTransition();
+```
+13. Creamos otros dos _hook_ de tipo `useRef`, y la respectiva
+importación de `"react"`:
+```js
+  const textareaRef = useRef<HTMLTextAreaElement>(null);
+  const contentRef = useRef<HTMLDivElement>(null);
+```
+14. Creamos la función de nombre `handleInput()`:
+```js
+  // Cuando se ingresa texto en el textarea, se ajusta el tamaño del textarea automáticamente
+  function handleInput() {
+    const textarea = textareaRef.current;
+    if (!textarea) return;
+
+    textarea.style.height = "auto";
+    textarea.style.height = `${textarea.scrollHeight}px`;
+  }
+```
+15. Creamos otra función de nombre `handleClickInput()`:
+```js
+  // Con el clic en cualquier parte, se enfoca el textarea  
+  function handleClickInput() {
+    textareaRef.current?.focus();
+  }
+```
+16. Creamos otras tres de nombres `handleSubmit()`, 
+`scrollToBottom()` y `handleKeyDown()`:
+```js
+  // Enviar el mensaje
+  function handleSubmit() {
+    console.log("handleSubmit");
+  }
+
+  // Cuando se va hacia abajo, se desplaza hacia abajo el contenedor de mensajes
+  function scrollToBottom() {
+    contentRef.current?.scrollTo({
+      top: contentRef.current.scrollHeight,
+      behavior: "smooth",
+    });
+  }
+
+  //Cuando se presiona la tecla Enter, se envía el mensaje
+  function handleKeyDown(e: React.KeyboardEvent<HTMLTextAreaElement>) {
+    if (e.key === "Enter" && !e.shiftKey) {
+      e.preventDefault();
+      handleSubmit();
+    }
+  }
+```
