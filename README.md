@@ -3512,3 +3512,99 @@ importación de `"react"`:
     }
   }
 ```
+
+17. El primer `<Button` cambiamos el `variant` de `"outline"` a
+`"secondary"` y el texto de `Edit Profil` por `Ask AI`:
+```js
+        <Button variant="secondary">Ask AI</Button>
+```
+18. Cambiamos el estilo del renderizado de `<DialogContent` y se
+agrega un elemento `ref=`:
+```js
+      <DialogContent
+        className="custom-scrollbar flex h-[85vh] max-w-4xl flex-col overflow-y-auto"
+        ref={contentRef}
+      >
+```
+19. Cambiamos el texto del renderizado de `<DialogTitle` por
+`Ask AI About Your Notes`.
+20. El texto del renderizado de `<DialogDescription`, lo cambiamos
+por `Out AI can answer questions about all of your notes.`.
+21. Borramos o comentamos todo lo que hay entre `</DialogHeader>` y
+`</DialogContent>`.
+22. Se borra o comenta cuando se importa el `DialogFooter,`.
+23. Debajo de `</DialogHeader>` y antes del texto comentado, 
+empezamos con un `<div` y algo mas de código:
+```js
+        <div>
+          {questions.map((question, index) => (
+            <Fragment key={index}>
+              <p>{question}</p>
+              {responses[index] && (
+                <p
+                  className="bot-response text-muted-foreground text-sm"
+                  dangerouslySetInnerHTML={{ __html: responses[index] }}
+                />
+              )}
+            </Fragment>
+          ))}
+        </div>
+```
+* Importamos `Fragment` de `"react"`.
+24. Agregamos un `className` el primer elemento `<p`:
+```js
+              <p className="bg-muted text-muted-foreground ml-auto max-w-[60%] rounded-md px-2 py-1 text-sm">
+                {question}
+              </p>
+```
+25. Agregamos un `className` el elemento `<div`:
+```js
+        <div className="mt-4 flex flex-col gap-8">
+```
+26. Justo antes de cerrar el `</div>`, ponemos una pregunta
+basada en `isPending`:
+```js
+          {isPending && <p className="animate-pulse text-sm">Thinking...</p>}
+```
+27. Creamos otro elemento `<div` debajo del cierre de `</div>` y antes de los comentarios, con un `className` y un elemento
+`onClick`:
+```js
+        <div
+          className="mt-auto flex cursor-text flex-col rounded-lg border p-4"
+          onClick={handleClickInput}
+        ></div>
+```
+28. Dentro de este segundo `<div` agregamos un renderizado de 
+`<Textarea`, con estos elementos:
+```js
+          <Textarea
+            ref={textareaRef}
+            placeholder="Ask me anything about your notes..."
+            className="placeholder:text-muted-foreground resize-none rounded-none border-none bg-transparent p-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
+          />
+```
+* Y la respectiva importación de `"./ui/textarea"`.
+29. Agregamos mas elementos a ese `<Textarea`:
+```js
+            style={{
+              minHeight: "0",
+              lineHeight: "normal",
+            }}
+            rows={1}
+            onInput={handleInput}
+            onKeyDown={handleKeyDown}
+            value={questionText}
+            onChange={(e) => setQuestionText(e.target.value)}
+```
+30. Debajo de este `<Textarea`, agregamos el renderizado de
+un `<Button`:
+```js
+          <Button className="ml-auto size-8 rounded-full">
+            <ArrowUpIcon className="text-background" />
+          </Button>
+```
+* Y la respectiva importación de `"lucide-react"`.
+31. Cuando se presiona el botón `[Ask AI]`, aparece el
+cuadro de diálogo con esto:  
+![Ask AI](images/2025-04-15_183157.png "Ask AI")
+

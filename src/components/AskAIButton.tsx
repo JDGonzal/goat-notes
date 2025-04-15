@@ -7,15 +7,17 @@ import {
   Dialog,
   DialogContent,
   DialogDescription,
-  DialogFooter,
+  // DialogFooter,
   DialogHeader,
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useRef, useState, useTransition } from "react";
+import { Fragment, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
+import { Textarea } from "./ui/textarea";
+import { ArrowUpIcon } from "lucide-react";
 
 type Props = { user: User | null }; // "@supabase/supabase-js"
 
@@ -84,16 +86,58 @@ function AskAIButton({ user }: Props) {
   return (
     <Dialog open={open} onOpenChange={handleOnOpenChange}>
       <DialogTrigger asChild>
-        <Button variant="outline">Edit Profile</Button>
+        <Button variant="secondary">Ask AI</Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[425px]">
+      <DialogContent
+        className="custom-scrollbar flex h-[85vh] max-w-4xl flex-col overflow-y-auto"
+        ref={contentRef}
+      >
         <DialogHeader>
-          <DialogTitle>Edit profile</DialogTitle>
+          <DialogTitle>Ask AI About Your Notes</DialogTitle>
           <DialogDescription>
-            Make changes to your profile here. Click save when you're done.
+            Out AI can answer questions about all of your notes.
           </DialogDescription>
         </DialogHeader>
-        <div className="grid gap-4 py-4">
+        <div className="mt-4 flex flex-col gap-8">
+          {questions.map((question, index) => (
+            <Fragment key={index}>
+              <p className="bg-muted text-muted-foreground ml-auto max-w-[60%] rounded-md px-2 py-1 text-sm">
+                {question}
+              </p>
+              {responses[index] && (
+                <p
+                  className="bot-response text-muted-foreground text-sm"
+                  dangerouslySetInnerHTML={{ __html: responses[index] }}
+                />
+              )}
+            </Fragment>
+          ))}
+          {isPending && <p className="animate-pulse text-sm">Thinking...</p>}
+        </div>
+
+        <div
+          className="mt-auto flex cursor-text flex-col rounded-lg border p-4"
+          onClick={handleClickInput}
+        >
+          <Textarea
+            ref={textareaRef}
+            placeholder="Ask me anything about your notes..."
+            className="placeholder:text-muted-foreground resize-none rounded-none border-none bg-transparent p-0 shadow-none focus-visible:ring-0 focus-visible:ring-offset-0"
+            style={{
+              minHeight: "0",
+              lineHeight: "normal",
+            }}
+            rows={1}
+            onInput={handleInput}
+            onKeyDown={handleKeyDown}
+            value={questionText}
+            onChange={(e) => setQuestionText(e.target.value)}
+          />
+          <Button className="ml-auto size-8 rounded-full">
+            <ArrowUpIcon className="text-background" />
+          </Button>
+        </div>
+        {/*<div className="grid gap-4 py-4">
           <div className="grid grid-cols-4 items-center gap-4">
             <Label htmlFor="name" className="text-right">
               Name
@@ -106,10 +150,10 @@ function AskAIButton({ user }: Props) {
             </Label>
             <Input id="username" value="@peduarte" className="col-span-3" />
           </div>
-        </div>
+        </div>*
         <DialogFooter>
           <Button type="submit">Save changes</Button>
-        </DialogFooter>
+        </DialogFooter>*/}
       </DialogContent>
     </Dialog>
   );
