@@ -18,6 +18,8 @@ import { Fragment, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
 import { Textarea } from "./ui/textarea";
 import { ArrowUpIcon } from "lucide-react";
+import { askAIAboutNotesAction } from "@/actions/notes";
+import "@/styles/ai-response.css";
 
 type Props = { user: User | null }; // "@supabase/supabase-js"
 
@@ -64,7 +66,20 @@ function AskAIButton({ user }: Props) {
 
   // Enviar el mensaje
   function handleSubmit() {
-    console.log("handleSubmit");
+    // Si esta vacío, no se hace nada
+    if (!questionText.trim()) return;
+
+    const newQuestions = [...questions, questionText];
+    setQuestions(newQuestions);
+    setQuestionText("");
+    setTimeout(scrollToBottom, 100); // Hay que dar un tiempo para que se vea el mensaje antes de que se envíe la respuesta
+
+    startTransition(async () => {
+      const response = await askAIAboutNotesAction(newQuestions, responses);
+      setResponses((prev) => [...prev, response]);
+
+      setTimeout(scrollToBottom, 100); // Esperar igual
+    });
   }
 
   // Cuando se va hacia abajo, se desplaza hacia abajo el contenedor de mensajes
