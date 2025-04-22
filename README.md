@@ -2110,7 +2110,7 @@ que es el `Settings`, en la parte superior derecha:
 
 
 11. La API Key del paso 8 de , la copiamos en el archivo **`.env.local`**
-con el nombre de `OPEN_API_KEY`.
+con el nombre de `OPENAI_API_KEY`.
 12. Regresamos al componente **`app/page.tsx`**, dentro de la función
 `HomePage()` y damos `[Ctrl]` + click en el renderizado de 
 `<AskAIButton`.
@@ -3608,3 +3608,179 @@ un `<Button`:
 cuadro de diálogo con esto:  
 ![Ask AI](images/2025-04-15_183157.png "Ask AI")
 
+
+
+
+32. En la función `handleSubmit()`, hacemos estos cambios:
+```js
+    // Si esta vacío, no se hace nada
+    if (!questionText.trim()) return;
+
+    const newQuestions = [...questions, questionText];
+    setQuestions(newQuestions);
+    setQuestionText("");
+    setTimeout(scrollToBottom, 100); // Hay que dar un tiempo para que se vea el mensaje antes de que se envíe la respuesta
+```
+
+33. Añadimos a esta función un `startTransition`:
+```js
+    startTransition(async () => {
+      const response = await askAIAboutNotesAction(newQuestions, responses);
+      setResponses((prev) => [...prev, response]);
+
+      setTimeout(scrollToBottom, 100); // Esperar igual
+    });
+```
+>[!WARNING]  
+>El error es porque falta construir esta acción 
+>`askAIAboutNotesAction`.
+
+34. Abrimos el archivo **`actions/notes.tsx`**, agregamos la 
+función `askAIAboutNotesAction()`:
+```js
+export async function askAIAboutNotesAction(
+  newQuestions: string[],
+  responses: string[],
+) {
+  const user = await getUser();
+  if (!user) throw new Error("You must be logged in to ask AI questions");
+}
+
+  return null || ""; // Ponemos esto de forma temporal
+```
+35. Regresamos al componente **`AskAIButton.ts`** y realizamos
+la importación faltante:
+```js
+import { askAIAboutNotesAction } from "@/actions/notes";
+```
+36. En la función `askAIAboutNotesAction()` de 
+**`actions/notes.tsx`**, copiamos un _fetch_ de `prisma` y hacemos
+unso cambios:
+```js
+  // Aquí se obtienen las notas del usuario
+  const notes = await prisma.note.findMany({
+    where: { authorId: user.id },
+    orderBy: { createdAt: "desc" },
+    select: { text: true, createdAt: true, updatedAt: true },
+  });
+```
+37. Si no hay notas, se devuelve un mensaje:
+```js
+  // Si no hay notas, se devuelve un mensaje
+  if (notes.length === 0) {
+    return "You don't have any notes yet.";
+```
+38. Si hay notas, debemos hacer un formato que la `A.I.` pueda
+entender fácilemente:
+```js
+  //Si hay notas, se hace un formato que la `A.I.` pueda entender
+  const formattedNotes = notes
+    .map((note) =>
+      `
+      Text: ${note.text}
+      Created at: ${note.createdAt}
+      Last updated: ${note.updatedAt}
+      `.trim(), // este trim al final para evitar espacios innecesarios
+    )
+    .join("\n");
+```
+39. Creamos una constante de nombre `messages`, para  explicarle a
+`Chat-GPT` que necesitamos exactamente:
+```js
+  // Para explicarle a `Chat-GPT` que necesitamos exactamente
+  const messages: ChatCompletionMessageParam[] = [
+    {
+      role: "developer",
+      content: `
+            You are a helpful assistant that answers questions about a user's notes. 
+            Assume all questions are related to the user's notes. 
+            Make sure that your answers are not too verbose and you speak succinctly. 
+            Your responses MUST be formatted in clean, valid HTML with proper structure. 
+            Use tags like <p>, <strong>, <em>, <ul>, <ol>, <li>, <h1> to <h6>, and <br> when appropriate. 
+            Do NOT wrap the entire response in a single <p> tag unless it's a single paragraph. 
+            Avoid inline styles, JavaScript, or custom attributes.
+            
+            Rendered like this in JSX:
+            <p dangerouslySetInnerHTML={{ __html: YOUR_RESPONSE }} />
+      
+            Here are the user's notes:
+            ${formattedNotes}
+            `,
+    },
+  ];
+```
+>[!WARNING]  
+>Tenemos un error por que no sabe que es `ChatCompletionMessageParam`.
+>
+>### Instalamos la libreria de [`OpenAI`](https://www.npmjs.com/package/openai)
+
+40. Se ejecuta este comando en la `TERMINAL`:
+```bash
+pnpm add openai -E
+```
+
+41. Regresamos al archivo **`actions/notes.tsx`** y completamos}
+la importación faltante:
+```js
+import { ChatCompletionMessageParam } from "openai/resources/index.mjs";
+```
+
+42. Creamos un archivo en la carpeta **"src"** de nombre
+**`openai/index.ts`** con este código:
+```js
+import OpenAI from "openai";
+
+const openai = new OpenAI({
+  apiKey: process.env.OPENAI_API_KEY,
+});
+
+export default openai;
+```
+
+>[!CAUTION]  
+>Se corrige el nombre en el archivo **`.env.local`**, de
+>`OPENAI_API_KEY`.
+
+43. Revisamos que el archivo **`.env.local`**, si tenga este 
+elemento del 
+[13. Set Up OpenAI Account](#13-set-up-openai-account-10911):  
+![.env.local](images/2025-04-15_192559.png ".env.local") 
+
+
+
+44. En el archivo **`actions/notes.tsx`**, debajo de la constante
+`messages`, pornemos un `for`, para cargar `messages`:
+```js
+  for (let i = 0; i < newQuestions.length; i++) {
+    messages.push({ role: "user", content: newQuestions[i] });
+    if (responses.length > i) {
+      messages.push({ role: "assistant", content: responses[i] });
+    }
+  }
+```
+45. Debajo de ese `for` creamos la constante `completion`
+que cargamos de `openai.chat.completions.create(` e
+importamos de `"@/openai"`:
+```js
+  const completion = await openai.chat.completions.create({ // "@/openai"
+    model: "gpt-4o-mini",
+    messages,
+  });
+```
+46. Por útlimo cambiamos el `return` temporal de la función 
+`askAIAboutNotesAction()` por este:
+```js
+  return completion.choices[0].message.content || "A problem has occurred";
+```
+
+47. De este sitio [**`ai-response.css`**](https://github.com/ColeBlender/goat-notes/blob/main/src/styles/ai-response.css), descargamos el archivo y lo ponemos en 
+la carpeta **"src/styles"**.
+
+48. Vamos a importar este archivo dentro de **`AskAIButton.tsx`**:
+```js
+import "@/styles/ai-response.css";
+```
+
+>[!NOTE]  
+>### Así se ve la ejecución con la `A.I.`:
+>![Ask AI](images/2025-04-21_191723.gif "Ask AI")
