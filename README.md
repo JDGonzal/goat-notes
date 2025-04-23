@@ -3784,3 +3784,67 @@ import "@/styles/ai-response.css";
 >[!NOTE]  
 >### Así se ve la ejecución con la `A.I.`:
 >![Ask AI](images/2025-04-21_191723.gif "Ask AI")
+>
+
+
+
+
+## 21. Deploy to Vercel (2:21:43)
+
+
+>[!NOTE]  
+>El paso de tener un repositorio en [`Github`](https://github.com/),
+>ya lo tenemos cubireto, dado que este proyecto está ya _subido_
+>en este repositorio.
+
+1. Vamos al sitio de [`Vercel`](https://vercel.com/signup) 
+y creo una cuenta o ingreso a una existente:  
+![Vercel `login In`/`Sign Up`](images/2025-04-22_175354.gif "Vercel `login In`/`Sign Up`")
+
+
+2. En [`Vercel`](), vamos al tríangulo 🔼 
+en la esquina superior-izquierda, luego en el botón de
+`[Add New...]`-> `Project`.
+3. Instalamos lo necesario de `Github` y damos los permisos
+pedidos.
+4. Importamos el proyecto que estamos trabajando de 
+`goat-notes`.
+5. Damos el botón de `[Deploy]`:
+
+![Vercel `Import`/`Deploy`](images/2025-04-22_180713.gif "Vercel `Import`/`Deploy`")
+
+
+
+>[!WARNING]  
+>Van a reventar errores, que faltan elementos y pasos por completar.
+
+6. Empezamos por el archivo **`eslint.config.mjs`**y añado otra
+regla:
+```js
+const eslintConfig = [
+  ...compat.extends("next/core-web-vitals", "next/typescript"),
+  {
+    rules: {
+      "react/no-unescaped-entities": "off",
+      "@typescript-eslint/no-unused-vars": "off",
+    },
+  }
+];
+```
+7. Abrimos el archivo **`.env.local`** y copiamos el contenido,
+dentro de `Vercel` en el espacio de `Environment Variables`.
+
+>[!TIP]  
+>Sorprendente como se deja copiar toda esa información.
+
+8. En el archivo **`package.json`**, cambiamos el `script`, de
+nombre `"build"` , por este:
+```ini
+  "scripts": {
+    ...
+    "build": "pnpm dlx prisma generate && next build",
+    ...
+  },
+```
+9. Subimos esto cambios al repositorio.
+
