@@ -3846,5 +3846,46 @@ nombre `"build"` , por este:
     ...
   },
 ```
-9. Subimos esto cambios al repositorio.
+9. Subimos estos cambios al repositorio.
+
+10. Regresamos a `Vercel` y damos de nuevo en el botón
+`[Deploy]`
+
+![Primer despliegue Error al final](images/2025-04-22_193215a.gif "Primer despliegue Error al final")
+
+
+
+
+>[!WARNING]  
+>Compila bien, pero tenemos un error, que es una ruta en las
+`Environment Variables`
+>
+>![Error del `MIDDLEWARE`](images/2025-04-22_190949.png "Error del `MIDDLEWARE`")
+>
+
+
+
+11. Regresamos con el botón `[Continue to Dasboard]`:  
+![Continue to Dashboard](images/2025-04-22_191110.png "Continue to Dashboard")
+
+
+
+
+
+12. Buscamos `Setting` en la parte superior-derecha.
+13. Clic en `Environment Variables` y volvemos a copiar del 
+archivo **`.env.local`** el contenido,
+dentro de `Vercel`, para luego cambiar el valor de 
+`NEXT_PUBLIC_BASE_UR`, por la ruta que aparece en pantalla con 
+el error, en mi caso esta es mi url 
+[`https://goat-notes-jcgd.vercel.app/`](https://goat-notes-jcgd.vercel.app/).
+14. Hago de nuevo un `Re-deploy` y ya me aparece el sitio 
+correctamente.
+
+![Re-Deploy](images/2025-04-22_193215b.gif "Re-Deploy")
+
+
+
+
+15.
 
